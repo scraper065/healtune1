@@ -424,6 +424,79 @@ function App() {
               <AlertTriangle className="text-red-400" size={24} />
             </div>
           )}
+
+          {/* Personal Assessment */}
+          {(() => {
+            const concerns = [];
+            const benefits = [];
+            let suitable = true;
+            
+            // Check based on user profile
+            if (userProfile.diseases?.includes('diyabet') && nutrition.sugar?.value > 10) {
+              concerns.push(`Yüksek şeker (${nutrition.sugar?.value}g)`);
+              suitable = false;
+            }
+            if (userProfile.diseases?.includes('hipertansiyon') && nutrition.salt?.value > 1) {
+              concerns.push(`Yüksek tuz (${nutrition.salt?.value}g)`);
+              suitable = false;
+            }
+            if (userProfile.diseases?.includes('kolesterol') && nutrition.saturated_fat?.value > 5) {
+              concerns.push(`Yüksek doymuş yağ (${nutrition.saturated_fat?.value}g)`);
+              suitable = false;
+            }
+            if (userProfile.goals?.includes('kilo_ver') && nutrition.energy?.value > 300) {
+              concerns.push(`Yüksek kalori (${nutrition.energy?.value} kcal)`);
+            }
+            if (userProfile.goals?.includes('seker_azalt') && nutrition.sugar?.value > 5) {
+              concerns.push(`Şeker içeriği (${nutrition.sugar?.value}g)`);
+            }
+            
+            // Benefits
+            if (nutrition.protein?.value > 10) benefits.push(`Yüksek protein (${nutrition.protein?.value}g)`);
+            if (nutrition.fiber?.value > 3) benefits.push(`İyi lif kaynağı (${nutrition.fiber?.value}g)`);
+            if (nutrition.sugar?.value < 5) benefits.push('Düşük şeker');
+            if (nutrition.salt?.value < 0.5) benefits.push('Düşük tuz');
+            
+            return (
+              <div className="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${suitable ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
+                    <span className="text-xl">{suitable ? '👍' : '⚠️'}</span>
+                  </div>
+                  <div>
+                    <p className={`font-semibold ${suitable ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      Kişisel Değerlendirme
+                    </p>
+                    <p className="text-slate-400 text-sm">
+                      {suitable ? 'Bu ürün sizin için uygundur.' : 'Dikkat edilmesi gereken içerikler var.'}
+                    </p>
+                  </div>
+                </div>
+                
+                {concerns.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-slate-500 text-xs mb-2">Dikkat:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {concerns.map((c, i) => (
+                        <span key={i} className="px-3 py-1 bg-red-500/20 text-red-300 rounded-full text-xs">{c}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {benefits.length > 0 && (
+                  <div>
+                    <p className="text-slate-500 text-xs mb-2">Faydaları:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {benefits.map((b, i) => (
+                        <span key={i} className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs">{b}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Portion Calculator */}
