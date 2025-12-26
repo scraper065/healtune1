@@ -74,12 +74,20 @@ function App() {
   const [favorites, setFavorites] = useState([]);
   const [history, setHistory] = useState([]);
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [userProfile, setUserProfile] = useState({
+    diseases: [],
+    sensitivities: [],
+    diet: [],
+    goals: []
+  });
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('gidax_favorites');
     const savedHistory = localStorage.getItem('gidax_history');
+    const savedProfile = localStorage.getItem('gidax_profile');
     if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
     if (savedHistory) setHistory(JSON.parse(savedHistory));
+    if (savedProfile) setUserProfile(JSON.parse(savedProfile));
   }, []);
 
   const analyzeImage = async (imageData) => {
@@ -638,29 +646,97 @@ function App() {
     </div>
   );
 
-  const renderProfile = () => (
-    <div className="flex-1 overflow-auto pb-24 px-4 pt-6">
-      <h2 className="text-xl font-bold text-white mb-4">Profil</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/5">
-        <div className="text-center mb-6">
-          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mb-3">
-            <User size={36} className="text-white" />
-          </div>
-          <p className="text-white font-semibold">Kullanıcı</p>
+  const toggleProfileOption = (category, value) => {
+    setUserProfile(prev => {
+      const updated = { ...prev };
+      if (updated[category].includes(value)) {
+        updated[category] = updated[category].filter(v => v !== value);
+      } else {
+        updated[category] = [...updated[category], value];
+      }
+      localStorage.setItem('gidax_profile', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const renderProfile = () => {
+    const profileOptions = {
+      diseases: [
+        { id: 'diyabet', label: 'Diyabet', icon: '🩸' },
+        { id: 'hipertansiyon', label: 'Hipertansiyon', icon: '💓' },
+        { id: 'kolesterol', label: 'Yüksek Kolesterol', icon: '🫀' },
+        { id: 'kalp', label: 'Kalp Hastalığı', icon: '❤️' },
+      ],
+      sensitivities: [
+        { id: 'gluten', label: 'Gluten', icon: '🌾' },
+        { id: 'laktoz', label: 'Laktoz', icon: '🥛' },
+        { id: 'fistik', label: 'Fıstık Alerjisi', icon: '🥜' },
+        { id: 'yumurta', label: 'Yumurta Alerjisi', icon: '🥚' },
+      ],
+      diet: [
+        { id: 'vegan', label: 'Vegan', icon: '🌱' },
+        { id: 'vejetaryen', label: 'Vejetaryen', icon: '🥗' },
+        { id: 'helal', label: 'Helal', icon: '☪️' },
+        { id: 'kosher', label: 'Koşer', icon: '✡️' },
+      ],
+      goals: [
+        { id: 'kilo_ver', label: 'Kilo Verme', icon: '⚖️' },
+        { id: 'kas_yap', label: 'Kas Yapma', icon: '💪' },
+        { id: 'seker_azalt', label: 'Şeker Azaltma', icon: '🍬' },
+        { id: 'tuz_azalt', label: 'Tuz Azaltma', icon: '🧂' },
+      ]
+    };
+
+    const renderOptionGroup = (title, category, options) => (
+      <div className="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+        <h3 className="text-white font-semibold mb-4">{title}</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {options.map(opt => {
+            const isSelected = userProfile[category]?.includes(opt.id);
+            return (
+              <button
+                key={opt.id}
+                onClick={() => toggleProfileOption(category, opt.id)}
+                className={`flex items-center gap-2 p-3 rounded-xl transition-all ${
+                  isSelected 
+                    ? 'bg-emerald-500/20 border-2 border-emerald-500/50 text-emerald-400' 
+                    : 'bg-slate-900/50 border-2 border-transparent text-slate-400 hover:bg-slate-800'
+                }`}
+              >
+                <span className="text-lg">{opt.icon}</span>
+                <span className="text-sm font-medium">{opt.label}</span>
+                {isSelected && <Check size={16} className="ml-auto" />}
+              </button>
+            );
+          })}
         </div>
-        <div className="space-y-4">
-          <div className="bg-slate-900/50 rounded-xl p-4">
-            <p className="text-slate-400 text-sm mb-1">Toplam Analiz</p>
+      </div>
+    );
+
+    return (
+      <div className="flex-1 overflow-auto pb-24 px-4 pt-6 space-y-4">
+        <h2 className="text-xl font-bold text-white mb-2">Profil Ayarları</h2>
+        <p className="text-slate-400 text-sm mb-4">Kişiselleştirilmiş öneriler için bilgilerinizi girin</p>
+        
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-2">
+          <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/10 rounded-2xl p-4 border border-emerald-500/20">
+            <p className="text-slate-400 text-xs mb-1">Toplam Analiz</p>
             <p className="text-white text-2xl font-bold">{history.length}</p>
           </div>
-          <div className="bg-slate-900/50 rounded-xl p-4">
-            <p className="text-slate-400 text-sm mb-1">Favori Ürünler</p>
+          <div className="bg-gradient-to-br from-pink-500/20 to-rose-500/10 rounded-2xl p-4 border border-pink-500/20">
+            <p className="text-slate-400 text-xs mb-1">Favoriler</p>
             <p className="text-white text-2xl font-bold">{favorites.length}</p>
           </div>
         </div>
+
+        {renderOptionGroup('🏥 Sağlık Durumları', 'diseases', profileOptions.diseases)}
+        {renderOptionGroup('⚠️ Hassasiyetler & Alerjiler', 'sensitivities', profileOptions.sensitivities)}
+        {renderOptionGroup('🍽️ Diyet Tercihleri', 'diet', profileOptions.diet)}
+        {renderOptionGroup('🎯 Hedefler', 'goals', profileOptions.goals)}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
