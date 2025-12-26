@@ -2,28 +2,39 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+/* Base Styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 html {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
 }
 
 body {
   background: #0f172a;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   overflow-x: hidden;
 }
 
-/* Custom scrollbar */
+/* iOS viewport fix */
+html {
+  height: -webkit-fill-available;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 ::-webkit-scrollbar-track {
@@ -32,132 +43,117 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+/* Smooth Scrolling */
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Button Active States */
+button, label {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+button:active, label:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Safe Area Padding for iOS */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  nav {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
+  }
+  
+  .pb-28 {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Input Styles */
+input {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 12px;
+}
+
+input:focus {
+  outline: none;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+/* Card Hover/Active Effects */
+.card-interactive {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-interactive:active {
+  transform: scale(0.98);
 }
 
 /* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(16, 185, 129, 0.5);
-  }
+  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+  50% { box-shadow: 0 0 35px rgba(16, 185, 129, 0.5); }
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+@keyframes scan-line {
+  0% { top: 0; }
+  50% { top: calc(100% - 2px); }
+  100% { top: 0; }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+/* Score Circle */
+.score-circle {
+  position: relative;
 }
 
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.score-circle::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(var(--score-color) var(--score-percent), transparent 0);
+  z-index: -1;
+  opacity: 0.3;
 }
 
-/* Glass effect */
+/* Glass Effect */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* Active state for buttons */
-.active\:scale-95:active {
-  transform: scale(0.95);
-}
-
-.active\:scale-98:active {
-  transform: scale(0.98);
-}
-
-/* Safe area for mobile */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  nav {
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
-  }
-}
-
-/* Input focus ring */
-input:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
-}
-
-/* Smooth transitions */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-/* Hide file input */
-input[type="file"] {
-  display: none;
-}
-
-/* Score circle animation */
-.score-circle {
-  position: relative;
-  overflow: hidden;
-}
-
-.score-circle::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, var(--score-color), transparent);
-  animation: rotate 3s linear infinite;
-  opacity: 0.3;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Card hover effects */
-.card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-}
-
-/* Gradient text */
+/* Gradient Text */
 .gradient-text {
   background: linear-gradient(135deg, #10b981, #14b8a6);
   -webkit-background-clip: text;
@@ -165,9 +161,86 @@ input[type="file"] {
   background-clip: text;
 }
 
-/* Loading skeleton */
+/* Loading Skeleton */
 .skeleton {
   background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Camera Scanner Frame Animation */
+.scanner-frame::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+/* Responsive Typography */
+@media (max-width: 360px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch feedback */
+.touch-feedback {
+  position: relative;
+  overflow: hidden;
+}
+
+.touch-feedback::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--touch-x, 50%) var(--touch-y, 50%), rgba(255,255,255,0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.touch-feedback:active::after {
+  opacity: 1;
+}
+
+/* Prevent text selection on double tap */
+* {
+  -webkit-touch-callout: none;
+}
+
+/* Fix for 100vh on mobile */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
 }

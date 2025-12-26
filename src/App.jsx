@@ -374,20 +374,20 @@ JSON formatında yanıt ver:
 
   // Render functions
   const renderScanTab = () => (
-    <div className="flex-1 overflow-auto pb-24">
+    <div className="flex-1 overflow-auto pb-28 hide-scrollbar">
       {/* Canlı Kamera Görünümü */}
       {cameraActive ? (
-        <div className="fixed inset-0 bg-black z-40 flex flex-col">
+        <div className="fixed inset-0 bg-black z-40">
           {/* Kamera Header */}
-          <div className="absolute top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
+          <div className="absolute top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-black/70 to-transparent safe-area-top">
             <button 
               onClick={stopCamera}
-              className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center"
+              className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95"
             >
-              <X size={20} className="text-white" />
+              <X size={22} className="text-white" />
             </button>
-            <span className="text-white font-medium">Ürünü Çerçevele</span>
-            <div className="w-10" />
+            <span className="text-white font-medium text-sm">Ürünü Çerçeveye Al</span>
+            <div className="w-11" />
           </div>
           
           {/* Video Stream */}
@@ -402,102 +402,89 @@ JSON formatında yanıt ver:
           
           {/* Tarama Çerçevesi */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-72 h-72 border-2 border-emerald-400 rounded-3xl relative">
-              <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-emerald-400 rounded-tl-xl" />
-              <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-emerald-400 rounded-tr-xl" />
-              <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-emerald-400 rounded-bl-xl" />
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-emerald-400 rounded-br-xl" />
+            <div className="w-64 h-64 sm:w-72 sm:h-72 rounded-3xl relative scanner-frame">
+              {/* Köşe işaretleri */}
+              <div className="absolute -top-0.5 -left-0.5 w-12 h-12 border-t-[3px] border-l-[3px] border-emerald-400 rounded-tl-2xl" />
+              <div className="absolute -top-0.5 -right-0.5 w-12 h-12 border-t-[3px] border-r-[3px] border-emerald-400 rounded-tr-2xl" />
+              <div className="absolute -bottom-0.5 -left-0.5 w-12 h-12 border-b-[3px] border-l-[3px] border-emerald-400 rounded-bl-2xl" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-12 h-12 border-b-[3px] border-r-[3px] border-emerald-400 rounded-br-2xl" />
             </div>
           </div>
           
           {/* Alt Bilgi */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-emerald-500/20 border-4 border-emerald-400 flex items-center justify-center animate-pulse">
-                <Camera size={28} className="text-emerald-400" />
+          <div className="absolute bottom-0 left-0 right-0 p-6 pb-10 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+            <div className="text-center max-w-xs mx-auto">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center animate-pulse-glow">
+                <Camera size={24} className="text-emerald-400" />
               </div>
-              <p className="text-white font-semibold mb-1">Ekrana Dokun ve Tara</p>
-              <p className="text-slate-400 text-sm">Ürünü çerçeveye al ve ekrana dokun</p>
+              <p className="text-white font-semibold text-base mb-1">Ekrana Dokun</p>
+              <p className="text-slate-400 text-xs">Ürünü çerçeveye al ve taramak için dokun</p>
             </div>
           </div>
           
-          {/* Hidden Canvas */}
           <canvas ref={canvasRef} className="hidden" />
         </div>
       ) : (
         <>
-          {/* Hero Scanner */}
-          <div className="px-4 pt-6 pb-8">
-            <div className="relative bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-[32px] p-8 border border-white/10 backdrop-blur-xl overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-full blur-2xl" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-400/20 to-transparent rounded-full blur-2xl" />
-              
-              <div className="relative text-center">
-                <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                  <Camera size={36} className="text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Ürün Tara</h2>
-                <p className="text-slate-400 text-sm mb-6">Kamerayı aç, ürünü çerçevele, ekrana dokun</p>
-                
-                <div className="flex gap-3 justify-center">
-                  <button 
-                    onClick={startCamera}
-                    className="flex-1 max-w-[160px] py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl font-semibold text-white hover:shadow-lg hover:shadow-emerald-500/25 transition-all active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    <Video size={20} />
-                    Kamera
-                  </button>
-                  <label className="flex-1 max-w-[160px] py-4 px-6 bg-white/10 border border-white/20 rounded-2xl font-semibold text-white cursor-pointer hover:bg-white/15 transition-all active:scale-95 flex items-center justify-center gap-2">
-                    <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-                    <Search size={20} />
-                    Galeri
-                  </label>
-                </div>
-              </div>
-            </div>
+          {/* Welcome Header */}
+          <div className="px-4 pt-5 pb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Merhaba! 👋</h2>
+            <p className="text-slate-400 text-sm mt-1">Sağlıklı beslenme için ürünleri tara</p>
           </div>
 
-          {/* Barcode Input */}
-          <div className="px-4 mb-6">
-            <div className="bg-slate-800/50 rounded-2xl p-4 border border-white/5">
-              <p className="text-slate-400 text-sm mb-3">veya barkod numarası girin:</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={barcodeInput}
-                  onChange={(e) => setBarcodeInput(e.target.value)}
-                  placeholder="8690504055020"
-                  className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
-                />
-                <button className="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white font-semibold">
-                  <Search size={20} />
-                </button>
+          {/* Main Scan Card */}
+          <div className="px-4 mb-5">
+            <button 
+              onClick={startCamera}
+              className="w-full relative bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/5 rounded-2xl p-5 border border-emerald-500/20 active:scale-[0.98] transition-transform"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                  <Camera size={26} className="text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="text-base sm:text-lg font-bold text-white">Ürün Tara</h3>
+                  <p className="text-slate-400 text-xs sm:text-sm mt-0.5">Kameraya dokun ve ürünü göster</p>
+                </div>
+                <ChevronRight size={22} className="text-slate-500 flex-shrink-0" />
               </div>
-            </div>
+            </button>
           </div>
 
-          {/* Quick Test */}
+          {/* Gallery Option */}
+          <div className="px-4 mb-5">
+            <label className="flex items-center gap-4 bg-slate-800/40 rounded-2xl p-4 border border-white/5 cursor-pointer active:bg-slate-800/60 transition-colors">
+              <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-700/50 flex items-center justify-center flex-shrink-0">
+                <Search size={20} className="text-slate-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-white font-medium text-sm sm:text-base">Galeriden Seç</h4>
+                <p className="text-slate-500 text-xs mt-0.5 truncate">Kayıtlı fotoğraftan analiz et</p>
+              </div>
+            </label>
+          </div>
+
+          {/* Quick Test Section */}
           <div className="px-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap size={18} className="text-amber-400" />
-              <h3 className="text-white font-semibold">Hızlı Test</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <Zap size={16} className="text-amber-400" />
+              <h3 className="text-white font-semibold text-sm">Popüler Ürünler</h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               {quickTestProducts.map((product, idx) => (
                 <button
                   key={idx}
-                  className="bg-slate-800/50 hover:bg-slate-800 border border-white/5 rounded-2xl p-4 text-left transition-all active:scale-98 group"
+                  className="bg-slate-800/40 border border-white/5 rounded-xl p-3 sm:p-4 text-left active:bg-slate-800/70 transition-colors"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{product.icon}</span>
-                      <div>
-                        <p className="text-white font-medium text-sm">{product.name}</p>
-                        <p className="text-slate-500 text-xs">{product.brand}</p>
-                      </div>
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <span className="text-xl sm:text-2xl flex-shrink-0">{product.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium text-xs sm:text-sm truncate">{product.name}</p>
+                      <p className="text-slate-500 text-[10px] sm:text-xs truncate">{product.brand}</p>
                     </div>
                     <span 
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                      className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold text-white flex-shrink-0"
                       style={{ backgroundColor: product.color }}
                     >
                       {product.grade}
@@ -507,25 +494,23 @@ JSON formatında yanıt ver:
               ))}
             </div>
           </div>
-
-      {/* Info Text */}
-          <div className="px-4 mb-6">
-            <p className="text-center text-slate-500 text-xs">
-              🤖 Ekrana dokunarak ürünü tara
-            </p>
-          </div>
         </>
       )}
 
       {/* Analyzing Overlay */}
       {isAnalyzing && (
-        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center animate-pulse">
-              <Zap size={32} className="text-white" />
+        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="text-center px-6 animate-fade-in">
+            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center animate-pulse shadow-lg shadow-emerald-500/30">
+              <Zap size={30} className="text-white" />
             </div>
-            <p className="text-white font-semibold mb-2">AI Analiz Ediliyor...</p>
-            <p className="text-slate-400 text-sm">Birkaç saniye sürebilir</p>
+            <p className="text-white font-semibold text-lg mb-2">AI Analiz Ediliyor</p>
+            <p className="text-slate-400 text-sm">Birkaç saniye sürebilir...</p>
+            <div className="mt-6 flex justify-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: '0ms'}} />
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: '150ms'}} />
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: '300ms'}} />
+            </div>
           </div>
         </div>
       )}
@@ -918,28 +903,32 @@ JSON formatında yanıt ver:
   };
 
   const renderFavorites = () => (
-    <div className="flex-1 overflow-auto pb-24 px-4 pt-6">
-      <h2 className="text-xl font-bold text-white mb-4">Favorilerim</h2>
+    <div className="flex-1 overflow-auto pb-28 px-4 pt-5 hide-scrollbar">
+      <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Favorilerim</h2>
       {favorites.length === 0 ? (
-        <div className="text-center py-12">
-          <Heart size={48} className="mx-auto text-slate-600 mb-4" />
-          <p className="text-slate-400">Henüz favori ürün yok</p>
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
+            <Heart size={28} className="text-slate-600" />
+          </div>
+          <p className="text-slate-400 text-sm">Henüz favori ürün yok</p>
+          <p className="text-slate-500 text-xs mt-1">Beğendiğin ürünleri buraya ekle</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {favorites.map((item, idx) => (
             <button
               key={idx}
               onClick={() => setResult(item)}
-              className="w-full bg-slate-800/50 hover:bg-slate-800 border border-white/5 rounded-2xl p-4 text-left transition"
+              className="w-full bg-slate-800/40 border border-white/5 rounded-xl p-3.5 sm:p-4 text-left active:bg-slate-800/70 transition-colors animate-fade-in"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">{item.product.name}</p>
-                  <p className="text-slate-500 text-sm">{item.product.brand}</p>
+              <div className="flex items-center gap-3">
+                <span className="text-xl sm:text-2xl">{getCategoryIcon(item.product.category)}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium text-sm sm:text-base truncate">{item.product.name}</p>
+                  <p className="text-slate-500 text-xs truncate">{item.product.brand}</p>
                 </div>
                 <span 
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold text-white flex-shrink-0"
                   style={{ backgroundColor: item.gradeInfo.color }}
                 >
                   {item.gradeInfo.grade}
@@ -953,28 +942,32 @@ JSON formatında yanıt ver:
   );
 
   const renderHistory = () => (
-    <div className="flex-1 overflow-auto pb-24 px-4 pt-6">
-      <h2 className="text-xl font-bold text-white mb-4">Geçmiş</h2>
+    <div className="flex-1 overflow-auto pb-28 px-4 pt-5 hide-scrollbar">
+      <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Geçmiş</h2>
       {history.length === 0 ? (
-        <div className="text-center py-12">
-          <Clock size={48} className="mx-auto text-slate-600 mb-4" />
-          <p className="text-slate-400">Henüz analiz yok</p>
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
+            <Clock size={28} className="text-slate-600" />
+          </div>
+          <p className="text-slate-400 text-sm">Henüz analiz yok</p>
+          <p className="text-slate-500 text-xs mt-1">Taranan ürünler burada görünecek</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {history.map((item, idx) => (
             <button
               key={idx}
               onClick={() => setResult(item)}
-              className="w-full bg-slate-800/50 hover:bg-slate-800 border border-white/5 rounded-2xl p-4 text-left transition"
+              className="w-full bg-slate-800/40 border border-white/5 rounded-xl p-3.5 sm:p-4 text-left active:bg-slate-800/70 transition-colors animate-fade-in"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">{item.product.name}</p>
-                  <p className="text-slate-500 text-sm">{item.product.brand}</p>
+              <div className="flex items-center gap-3">
+                <span className="text-xl sm:text-2xl">{getCategoryIcon(item.product.category)}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium text-sm sm:text-base truncate">{item.product.name}</p>
+                  <p className="text-slate-500 text-xs truncate">{item.product.brand}</p>
                 </div>
                 <span 
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold text-white flex-shrink-0"
                   style={{ backgroundColor: item.gradeInfo.color }}
                 >
                   {item.gradeInfo.grade}
