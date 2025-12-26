@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Search, Heart, Clock, User, Star, Zap, Leaf, Shield, TrendingUp, Plus, Minus, ChevronRight, X, Check, AlertTriangle, Info } from 'lucide-react';
+import { Camera, Search, Heart, Clock, User, Star, Zap, Leaf, Shield, TrendingUp, Plus, Minus, ChevronRight, X, Check, AlertTriangle, Info, Share2 } from 'lucide-react';
 import './App.css';
 
 // Utility functions
@@ -47,6 +47,35 @@ const getNutrientLevel = (type, value) => {
   if (value <= t.low) return { level: 'low', label: 'Düşük', color: '#10B981' };
   if (value >= t.high) return { level: 'high', label: 'Yüksek', color: '#EF4444' };
   return { level: 'medium', label: 'Orta', color: '#F59E0B' };
+};
+
+// Category icons
+const getCategoryIcon = (category) => {
+  const icons = {
+    'Atıştırmalık': '🍪',
+    'İçecek': '🥤',
+    'Süt Ürünü': '🧀',
+    'Tahıl': '🌾',
+    'Et Ürünü': '🥩',
+    'Konserve': '🥫',
+    'Dondurulmuş': '🧊',
+    'Meyve': '🍎',
+    'Sebze': '🥬',
+    'Ekmek': '🍞',
+    'Makarna': '🍝',
+    'Şekerleme': '🍬',
+    'Çikolata': '🍫',
+    'Bisküvi': '🍪',
+    'Cips': '🥔',
+    'Yoğurt': '🥛',
+    'Peynir': '🧀',
+    'Süt': '🥛',
+    'Kahvaltılık': '🥣',
+    'Sos': '🫙',
+    'Baharat': '🌶️',
+    'Yağ': '🫒',
+  };
+  return icons[category] || '🍽️';
 };
 
 // Quick test products
@@ -359,6 +388,13 @@ function App() {
         </div>
       </div>
 
+      {/* Info Text */}
+      <div className="px-4 mb-6">
+        <p className="text-center text-slate-500 text-xs">
+          🤖 Barkod bulamazsa otomatik olarak AI görsel analiz yapar
+        </p>
+      </div>
+
       {/* Analyzing Overlay */}
       {isAnalyzing && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-50">
@@ -386,9 +422,28 @@ function App() {
             <ChevronRight size={24} className="rotate-180" />
           </button>
           <span className="text-white font-semibold">Analiz Sonucu</span>
-          <button onClick={toggleFavorite} className={`p-2 rounded-xl transition ${isFavorite ? 'text-red-400 bg-red-500/10' : 'text-slate-400 hover:text-white'}`}>
-            <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: `${product.name} - GidaX Analizi`,
+                    text: `${product.name} (${product.brand}): Sağlık Skoru ${healthScore}/100 - ${gradeInfo.label}`,
+                    url: window.location.href
+                  });
+                } else {
+                  navigator.clipboard.writeText(`${product.name} (${product.brand}): Sağlık Skoru ${healthScore}/100 - ${gradeInfo.label}`);
+                  alert('Panoya kopyalandı!');
+                }
+              }}
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              <Share2 size={20} />
+            </button>
+            <button onClick={toggleFavorite} className={`p-2 rounded-xl transition ${isFavorite ? 'text-red-400 bg-red-500/10' : 'text-slate-400 hover:text-white'}`}>
+              <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
+            </button>
+          </div>
         </div>
 
         {/* Product Card */}
@@ -396,7 +451,7 @@ function App() {
           <div className={`bg-gradient-to-br ${gradeInfo.bg} rounded-[28px] p-6 border border-white/10`}>
             <div className="flex items-start gap-4 mb-6">
               <div className="w-16 h-16 rounded-2xl bg-slate-800/80 flex items-center justify-center text-3xl">
-                🍽️
+                {getCategoryIcon(product.category)}
               </div>
               <div className="flex-1">
                 <h1 className="text-xl font-bold text-white">{product.name}</h1>
