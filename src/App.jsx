@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Search, Heart, Clock, User, Star, Zap, Leaf, Shield, TrendingUp, Plus, Minus, ChevronRight, X, Check, AlertTriangle, Info, Share2, Video, VideoOff } from 'lucide-react';
 import './App.css';
 
+// Data imports
+import { fetchProductByBarcode } from './api/openFoodFacts';
+import { turkishProductsDB, turkishBrandsList, boycottBrandsList, isTurkishBrand, isBoycottBrand, findLocalProduct } from './data/turkishProducts';
+import { eCodeDatabase, checkECode, hasHaramOrSuspicious } from './data/eCodes';
+
 // Utility functions
 const calculateHealthScore = (nutrition) => {
   let score = 70;
