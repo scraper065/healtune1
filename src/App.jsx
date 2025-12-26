@@ -102,7 +102,8 @@ function App() {
   const [favorites, setFavorites] = useState([]);
   const [history, setHistory] = useState([]);
   const [barcodeInput, setBarcodeInput] = useState('');
-  const [scanStatus, setScanStatus] = useState('idle'); // idle, scanning, detected, analyzing
+  const [scanStatus, setScanStatus] = useState('idle');
+  const [toast, setToast] = useState(null); // {type: 'error'|'success'|'warning'|'info', message: string}
   const [userProfile, setUserProfile] = useState({
     diseases: [],
     sensitivities: [],
@@ -115,6 +116,12 @@ function App() {
   const streamRef = useRef(null);
   const scanIntervalRef = useRef(null);
   const lastScanRef = useRef(0);
+
+  // Toast göster
+  const showToast = (type, message, duration = 3000) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), duration);
+  };
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('gidax_favorites');
@@ -141,7 +148,7 @@ function App() {
       
     } catch (error) {
       console.error('Kamera hatası:', error);
-      alert('Kamera açılamadı. Lütfen kamera izni verin.');
+      showToast('error', 'Kamera açılamadı. Lütfen kamera izni verin.');
     }
   };
 
@@ -303,7 +310,7 @@ function App() {
       // Step 1: AI ile ürün adı ve barkod tespit et
       const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       if (!apiKey) {
-        alert('API key tanımlanmadı.');
+        showToast('error', 'Sistem hatası. Lütfen daha sonra tekrar deneyin.');
         setIsAnalyzing(false);
         return;
       }
@@ -355,7 +362,7 @@ JSON formatında yanıt ver:
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       
       if (!jsonMatch) {
-        alert('Ürün analiz edilemedi. Lütfen tekrar deneyin.');
+        showToast('warning', 'Ürün tanınamadı. Lütfen daha net bir açıdan tekrar deneyin.');
         setIsAnalyzing(false);
         return;
       }
@@ -393,7 +400,7 @@ JSON formatında yanıt ver:
       }
       
       if (!analysisData.found || !analysisData.nutrition?.per_100g) {
-        alert('Gıda ürünü tespit edilemedi. Ürünü daha net göstermeyi deneyin.');
+        showToast('warning', 'Gıda ürünü tespit edilemedi. Ürünün ön yüzünü göstermeyi deneyin.');
         setIsAnalyzing(false);
         return;
       }
@@ -435,7 +442,11 @@ JSON formatında yanıt ver:
       setIsAnalyzing(false);
     } catch (error) {
       console.error('Analiz hatası:', error);
-      alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+      if (!navigator.onLine) {
+        showToast('error', 'İnternet bağlantısı yok. Bağlantınızı kontrol edin.');
+      } else {
+        showToast('error', 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      }
       setIsAnalyzing(false);
     }
   };
@@ -1194,6 +1205,29 @@ JSON formatında yanıt ver:
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 left-4 right-4 z-[100] animate-slide-down`}>
+          <div className={`mx-auto max-w-sm px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 ${
+            toast.type === 'error' ? 'bg-red-500/90 backdrop-blur' :
+            toast.type === 'warning' ? 'bg-amber-500/90 backdrop-blur' :
+            toast.type === 'success' ? 'bg-emerald-500/90 backdrop-blur' :
+            'bg-slate-700/90 backdrop-blur'
+          }`}>
+            <div className="flex-shrink-0">
+              {toast.type === 'error' && <X size={20} className="text-white" />}
+              {toast.type === 'warning' && <AlertTriangle size={20} className="text-white" />}
+              {toast.type === 'success' && <Check size={20} className="text-white" />}
+              {toast.type === 'info' && <Info size={20} className="text-white" />}
+            </div>
+            <p className="text-white text-sm font-medium flex-1">{toast.message}</p>
+            <button onClick={() => setToast(null)} className="flex-shrink-0 p-1">
+              <X size={16} className="text-white/70" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="px-4 py-4 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-3">
