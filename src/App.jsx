@@ -60,10 +60,70 @@ const quickTestProducts = [
 ];
 
 // Boycott brands
-const boycottBrands = ['coca-cola', 'pepsi', 'nestle', 'starbucks', 'danone', 'pringles', 'lays', 'doritos'];
+const boycottBrands = ['coca-cola', 'pepsi', 'nestle', 'starbucks', 'danone', 'pringles', 'lays', 'doritos', 'lipton', 'magnum', 'algida', 'knorr', 'nescafe', 'kitkat', 'milka', 'oreo', 'mcdonalds', 'burger king', 'kfc', 'pizza hut'];
 
 // Turkish brands
-const turkishBrands = ['ülker', 'eti', 'torku', 'pınar', 'sütaş', 'tat', 'uno', 'tamek', 'dimes', 'uludağ', 'erikli'];
+const turkishBrands = ['ülker', 'eti', 'torku', 'pınar', 'sütaş', 'tat', 'uno', 'tamek', 'dimes', 'uludağ', 'erikli', 'hayat', 'sana', 'bizim', 'yudum', 'komili', 'tadım', 'peyman', 'koska', 'mado', 'kahve dünyası', 'namet', 'banvit', 'keskinoğlu', 'şenpiliç', 'sera', 'burcu', 'filiz', 'pastavilla', 'kent', 'albeni', 'çokoprens', 'sarelle'];
+
+// E-code database (Halal status: halal, haram, suspicious, unknown)
+const eCodeDatabase = {
+  // Kesinlikle Haram
+  'E120': { name: 'Karmin', status: 'haram', desc: 'Böcekten elde edilir' },
+  'E441': { name: 'Jelatin', status: 'haram', desc: 'Domuz kaynaklı olabilir' },
+  'E542': { name: 'Kemik fosfatı', status: 'haram', desc: 'Hayvansal kaynak' },
+  'E904': { name: 'Shellac', status: 'haram', desc: 'Böcek salgısı' },
+  'E920': { name: 'L-sistein', status: 'haram', desc: 'Domuz kılından' },
+  'E921': { name: 'L-sistein', status: 'haram', desc: 'Domuz kılından' },
+  // Şüpheli (kaynak belirsiz)
+  'E471': { name: 'Mono ve digliserit', status: 'suspicious', desc: 'Hayvansal/bitkisel belirsiz' },
+  'E472': { name: 'Gliserit esterleri', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E473': { name: 'Sukroz esterleri', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E474': { name: 'Sukrogliseritler', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E475': { name: 'Poligliserol esterleri', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E476': { name: 'Poligliserol', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E477': { name: 'Propilen glikol esterleri', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E481': { name: 'Sodyum stearoil laktat', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E482': { name: 'Kalsiyum stearoil laktat', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E483': { name: 'Stearil tartrat', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E491': { name: 'Sorbitan monostearat', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E492': { name: 'Sorbitan tristearat', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E493': { name: 'Sorbitan monolaurat', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E494': { name: 'Sorbitan monooleat', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E495': { name: 'Sorbitan monopalmitat', status: 'suspicious', desc: 'Kaynak belirsiz' },
+  'E631': { name: 'Sodyum inosinat', status: 'suspicious', desc: 'Et/balık kaynaklı olabilir' },
+  'E635': { name: 'Sodyum ribonükleotit', status: 'suspicious', desc: 'Et/balık kaynaklı olabilir' },
+  // Helal olanlar (yaygın kullanılan)
+  'E100': { name: 'Kurkumin', status: 'halal', desc: 'Bitkisel' },
+  'E101': { name: 'Riboflavin', status: 'halal', desc: 'Vitamin B2' },
+  'E160a': { name: 'Karoten', status: 'halal', desc: 'Bitkisel' },
+  'E160b': { name: 'Anato', status: 'halal', desc: 'Bitkisel' },
+  'E162': { name: 'Pancar kırmızısı', status: 'halal', desc: 'Bitkisel' },
+  'E170': { name: 'Kalsiyum karbonat', status: 'halal', desc: 'Mineral' },
+  'E200': { name: 'Sorbik asit', status: 'halal', desc: 'Sentetik' },
+  'E202': { name: 'Potasyum sorbat', status: 'halal', desc: 'Sentetik' },
+  'E211': { name: 'Sodyum benzoat', status: 'halal', desc: 'Sentetik' },
+  'E250': { name: 'Sodyum nitrit', status: 'halal', desc: 'Mineral' },
+  'E270': { name: 'Laktik asit', status: 'halal', desc: 'Fermantasyon' },
+  'E300': { name: 'Askorbik asit', status: 'halal', desc: 'Vitamin C' },
+  'E306': { name: 'Tokoferol', status: 'halal', desc: 'Vitamin E' },
+  'E322': { name: 'Lesitin', status: 'halal', desc: 'Soya kaynaklı' },
+  'E330': { name: 'Sitrik asit', status: 'halal', desc: 'Bitkisel' },
+  'E331': { name: 'Sodyum sitrat', status: 'halal', desc: 'Bitkisel' },
+  'E400': { name: 'Aljinik asit', status: 'halal', desc: 'Deniz yosunu' },
+  'E401': { name: 'Sodyum aljinat', status: 'halal', desc: 'Deniz yosunu' },
+  'E406': { name: 'Agar', status: 'halal', desc: 'Deniz yosunu' },
+  'E407': { name: 'Karragenan', status: 'halal', desc: 'Deniz yosunu' },
+  'E410': { name: 'Keçiboynuzu', status: 'halal', desc: 'Bitkisel' },
+  'E412': { name: 'Guar gum', status: 'halal', desc: 'Bitkisel' },
+  'E414': { name: 'Arap zamkı', status: 'halal', desc: 'Bitkisel' },
+  'E415': { name: 'Ksantan gum', status: 'halal', desc: 'Fermantasyon' },
+  'E440': { name: 'Pektin', status: 'halal', desc: 'Bitkisel' },
+  'E450': { name: 'Difosfat', status: 'halal', desc: 'Mineral' },
+  'E460': { name: 'Selüloz', status: 'halal', desc: 'Bitkisel' },
+  'E500': { name: 'Sodyum karbonat', status: 'halal', desc: 'Mineral' },
+  'E503': { name: 'Amonyum karbonat', status: 'halal', desc: 'Mineral' },
+  'E621': { name: 'MSG', status: 'halal', desc: 'Fermantasyon' },
+};
 
 function App() {
   const [currentTab, setCurrentTab] = useState('scan');
@@ -344,6 +404,12 @@ function App() {
                 <div className="flex gap-2 mt-2 flex-wrap">
                   <span className="px-3 py-1 bg-slate-800/60 rounded-full text-xs text-slate-300">{product.category}</span>
                   <span className="px-3 py-1 bg-slate-800/60 rounded-full text-xs text-slate-300">{product.serving_size || '100g'}</span>
+                  <span 
+                    className="px-3 py-1 rounded-full text-xs font-bold text-white"
+                    style={{ backgroundColor: gradeInfo.color }}
+                  >
+                    Nutri-Score {gradeInfo.grade}
+                  </span>
                 </div>
               </div>
             </div>
