@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Camera, Upload, X } from 'lucide-react';
 
-const ImageScanner = ({ onImageCapture, isAnalyzing }) => {
+const ImageScanner = ({ onImageSelected, isAnalyzing }) => {
   const [preview, setPreview] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
   const cameraRef = useRef(null);
@@ -51,7 +51,7 @@ const ImageScanner = ({ onImageCapture, isAnalyzing }) => {
       reader.onload = (e) => {
         setPreview(e.target.result);
         stopCamera();
-        onImageCapture(e.target.result);
+        onImageSelected(e.target.result);
       };
       reader.readAsDataURL(blob);
     }, 'image/jpeg', 0.95);
@@ -64,7 +64,7 @@ const ImageScanner = ({ onImageCapture, isAnalyzing }) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       setPreview(event.target.result);
-      onImageCapture(event.target.result);
+      onImageSelected(event.target.result);
     };
     reader.readAsDataURL(file);
   };
