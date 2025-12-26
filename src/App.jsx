@@ -332,11 +332,26 @@ function App() {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0);
+    // Görsel boyutunu küçült - daha hızlı upload ve işleme
+    const maxWidth = 800;
+    const maxHeight = 600;
+    let width = video.videoWidth;
+    let height = video.videoHeight;
     
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    if (width > maxWidth) {
+      height = (height * maxWidth) / width;
+      width = maxWidth;
+    }
+    if (height > maxHeight) {
+      width = (width * maxHeight) / height;
+      height = maxHeight;
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    context.drawImage(video, 0, 0, width, height);
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.7);
     stopCamera();
     analyzeImage(imageData);
   };
@@ -361,38 +376,14 @@ function App() {
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
-          max_tokens: 1500,
+          max_tokens: 800,
           messages: [{
             role: 'user',
             content: [
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Data}` } },
-              { type: 'text', text: `Bu gıda ürününü analiz et. Görseldeki ürünün MARKA adını, ürün adını ve besin değerlerini dikkatlice oku.
-
-ÖNEMLİ: 
-- Marka adını görselden tam olarak oku (Coca-Cola, Pepsi, Ülker, Eti vb.)
-- Eğer marka görünmüyorsa "Bilinmiyor" yaz
-- Besin değerlerini görselden oku, yoksa tahmin et
-
-JSON formatında yanıt ver:
-{
-  "found": true,
-  "product": { "name": "Ürün Adı Türkçe", "brand": "Marka Adı", "category": "Kategori", "serving_size": "100g" },
-  "nutrition": {
-    "per_100g": {
-      "energy": {"value": 0, "unit": "kcal"},
-      "protein": {"value": 0, "unit": "g"},
-      "carbohydrates": {"value": 0, "unit": "g"},
-      "sugar": {"value": 0, "unit": "g"},
-      "fat": {"value": 0, "unit": "g"},
-      "saturated_fat": {"value": 0, "unit": "g"},
-      "fiber": {"value": 0, "unit": "g"},
-      "salt": {"value": 0, "unit": "g"}
-    }
-  },
-  "ingredients": { "raw_text": "İçerik listesi", "additives_list": ["E kodları"] },
-  "nova_group": 1-4,
-  "alternatives": [{"name": "Alternatif", "brand": "Marka", "benefit": "Fayda", "score_diff": "+20"}]
-}` }
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Data}`, detail: 'low' } },
+              { type: 'text', text: `Gıda ürünü analizi. Marka ve besin değerlerini görselden oku.
+JSON:
+{"found":true,"product":{"name":"","brand":"","category":"","serving_size":"100g"},"nutrition":{"per_100g":{"energy":{"value":0,"unit":"kcal"},"protein":{"value":0,"unit":"g"},"carbohydrates":{"value":0,"unit":"g"},"sugar":{"value":0,"unit":"g"},"fat":{"value":0,"unit":"g"},"saturated_fat":{"value":0,"unit":"g"},"fiber":{"value":0,"unit":"g"},"salt":{"value":0,"unit":"g"}}},"ingredients":{"raw_text":"","additives_list":[]},"nova_group":3}` }
             ]
           }]
         })
