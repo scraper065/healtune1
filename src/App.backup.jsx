@@ -163,7 +163,6 @@ function App() {
   const [favorites, setFavorites] = useState([]);
   const [history, setHistory] = useState([]);
   const [barcodeInput, setBarcodeInput] = useState('');
-  const [scanStatus, setScanStatus] = useState('idle'); // idle, scanning, detected, analyzing
   const [userProfile, setUserProfile] = useState({
     diseases: [],
     sensitivities: [],
@@ -174,8 +173,6 @@ function App() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
-  const scanIntervalRef = useRef(null);
-  const lastScanRef = useRef(0);
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('gidax_favorites');
@@ -185,6 +182,13 @@ function App() {
     if (savedHistory) setHistory(JSON.parse(savedHistory));
     if (savedProfile) setUserProfile(JSON.parse(savedProfile));
   }, []);
+
+  // Kamera stream'i video'ya bağla
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [cameraActive]);
 
   // Kamera başlat
   const startCamera = async () => {
@@ -208,11 +212,6 @@ function App() {
 
   // Kamera kapat
   const stopCamera = () => {
-    // Auto-scan interval'i temizle
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -221,108 +220,7 @@ function App() {
       videoRef.current.srcObject = null;
     }
     setCameraActive(false);
-    setScanStatus('idle');
   };
-
-  // Auto-scan: Ürün tespiti için hızlı kontrol
-  const quickDetect = async (imageData) => {
-    try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!apiKey) return null;
-
-      const base64Data = imageData.split(',')[1] || imageData;
-      
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{
-            role: 'user',
-            content: [
-              { 
-                type: 'text', 
-                text: 'Bu görselde paketli bir gıda ürünü var mı? Sadece JSON yanıt ver: {"found": true/false, "confidence": 0-100, "type": "product/barcode/none"}' 
-              },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Data}`, detail: 'low' } }
-            ]
-          }],
-          max_tokens: 100
-        })
-      });
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content || '';
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-      return null;
-    } catch (error) {
-      console.error('Quick detect error:', error);
-      return null;
-    }
-  };
-
-  // Auto-scan başlat
-  const startAutoScan = () => {
-    if (scanIntervalRef.current) return;
-    
-    scanIntervalRef.current = setInterval(async () => {
-      // Eğer zaten analiz yapılıyorsa veya son taradan 3 saniye geçmediyse atla
-      if (isAnalyzing || Date.now() - lastScanRef.current < 3000) return;
-      if (!videoRef.current || !canvasRef.current || !cameraActive) return;
-      
-      lastScanRef.current = Date.now();
-      setScanStatus('scanning');
-      
-      // Frame al
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0);
-      
-      const imageData = canvas.toDataURL('image/jpeg', 0.5); // Düşük kalite = hızlı
-      
-      // Hızlı kontrol
-      const detection = await quickDetect(imageData);
-      
-      if (detection?.found && detection.confidence > 70) {
-        setScanStatus('detected');
-        // Ürün bulundu, yüksek kalitede tekrar çek ve analiz et
-        setTimeout(() => {
-          if (cameraActive && !isAnalyzing) {
-            captureAndAnalyze();
-          }
-        }, 500);
-      } else {
-        setScanStatus('scanning');
-      }
-    }, 2500); // Her 2.5 saniyede bir kontrol
-  };
-
-  // Kamera aktif olduğunda auto-scan başlat
-  useEffect(() => {
-    if (cameraActive && videoRef.current && streamRef.current) {
-      videoRef.current.srcObject = streamRef.current;
-      // Video yüklenince auto-scan başlat
-      videoRef.current.onloadedmetadata = () => {
-        startAutoScan();
-      };
-    }
-    return () => {
-      if (scanIntervalRef.current) {
-        clearInterval(scanIntervalRef.current);
-        scanIntervalRef.current = null;
-      }
-    };
-  }, [cameraActive]);
 
   // Ekrana dokunulduğunda frame yakala ve analiz et
   const captureAndAnalyze = () => {
@@ -503,53 +401,23 @@ JSON formatında yanıt ver:
           
           {/* Tarama Çerçevesi */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className={`w-64 h-64 sm:w-72 sm:h-72 rounded-3xl relative scanner-frame transition-all duration-300 ${
-              scanStatus === 'detected' ? 'scale-105' : ''
-            }`}>
+            <div className="w-64 h-64 sm:w-72 sm:h-72 rounded-3xl relative scanner-frame">
               {/* Köşe işaretleri */}
-              <div className={`absolute -top-0.5 -left-0.5 w-12 h-12 border-t-[3px] border-l-[3px] rounded-tl-2xl transition-colors ${
-                scanStatus === 'detected' ? 'border-green-400' : scanStatus === 'scanning' ? 'border-yellow-400' : 'border-emerald-400'
-              }`} />
-              <div className={`absolute -top-0.5 -right-0.5 w-12 h-12 border-t-[3px] border-r-[3px] rounded-tr-2xl transition-colors ${
-                scanStatus === 'detected' ? 'border-green-400' : scanStatus === 'scanning' ? 'border-yellow-400' : 'border-emerald-400'
-              }`} />
-              <div className={`absolute -bottom-0.5 -left-0.5 w-12 h-12 border-b-[3px] border-l-[3px] rounded-bl-2xl transition-colors ${
-                scanStatus === 'detected' ? 'border-green-400' : scanStatus === 'scanning' ? 'border-yellow-400' : 'border-emerald-400'
-              }`} />
-              <div className={`absolute -bottom-0.5 -right-0.5 w-12 h-12 border-b-[3px] border-r-[3px] rounded-br-2xl transition-colors ${
-                scanStatus === 'detected' ? 'border-green-400' : scanStatus === 'scanning' ? 'border-yellow-400' : 'border-emerald-400'
-              }`} />
+              <div className="absolute -top-0.5 -left-0.5 w-12 h-12 border-t-[3px] border-l-[3px] border-emerald-400 rounded-tl-2xl" />
+              <div className="absolute -top-0.5 -right-0.5 w-12 h-12 border-t-[3px] border-r-[3px] border-emerald-400 rounded-tr-2xl" />
+              <div className="absolute -bottom-0.5 -left-0.5 w-12 h-12 border-b-[3px] border-l-[3px] border-emerald-400 rounded-bl-2xl" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-12 h-12 border-b-[3px] border-r-[3px] border-emerald-400 rounded-br-2xl" />
             </div>
           </div>
           
-          {/* Alt Bilgi - Durum bazlı */}
+          {/* Alt Bilgi */}
           <div className="absolute bottom-0 left-0 right-0 p-6 pb-10 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
             <div className="text-center max-w-xs mx-auto">
-              {scanStatus === 'detected' ? (
-                <>
-                  <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-green-500/30 border-2 border-green-400 flex items-center justify-center">
-                    <Check size={28} className="text-green-400" />
-                  </div>
-                  <p className="text-green-400 font-semibold text-base mb-1">Ürün Tespit Edildi!</p>
-                  <p className="text-slate-400 text-xs">Analiz başlatılıyor...</p>
-                </>
-              ) : scanStatus === 'scanning' ? (
-                <>
-                  <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-yellow-500/20 border-2 border-yellow-400 flex items-center justify-center">
-                    <Search size={24} className="text-yellow-400 animate-pulse" />
-                  </div>
-                  <p className="text-yellow-400 font-semibold text-base mb-1">Taranıyor...</p>
-                  <p className="text-slate-400 text-xs">Ürün aranıyor, bekleyin veya ekrana dokunun</p>
-                </>
-              ) : (
-                <>
-                  <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center animate-pulse-glow">
-                    <Camera size={24} className="text-emerald-400" />
-                  </div>
-                  <p className="text-white font-semibold text-base mb-1">Otomatik Tarama Aktif</p>
-                  <p className="text-slate-400 text-xs">Ürünü çerçeveye al veya ekrana dokun</p>
-                </>
-              )}
+              <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center animate-pulse-glow">
+                <Camera size={24} className="text-emerald-400" />
+              </div>
+              <p className="text-white font-semibold text-base mb-1">Ekrana Dokun</p>
+              <p className="text-slate-400 text-xs">Ürünü çerçeveye al ve taramak için dokun</p>
             </div>
           </div>
           
