@@ -377,11 +377,11 @@ JSON formatında yanıt ver:
     <div className="flex-1 overflow-auto pb-28 hide-scrollbar">
       {/* Canlı Kamera Görünümü */}
       {cameraActive ? (
-        <div className="fixed inset-0 bg-black z-40">
+        <div className="fixed inset-0 bg-black z-40" onClick={captureAndAnalyze}>
           {/* Kamera Header */}
           <div className="absolute top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-black/70 to-transparent safe-area-top">
             <button 
-              onClick={stopCamera}
+              onClick={(e) => { e.stopPropagation(); stopCamera(); }}
               className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95"
             >
               <X size={22} className="text-white" />
@@ -397,7 +397,6 @@ JSON formatında yanıt ver:
             playsInline
             muted
             className="w-full h-full object-cover"
-            onClick={captureAndAnalyze}
           />
           
           {/* Tarama Çerçevesi */}
