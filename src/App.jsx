@@ -376,14 +376,32 @@ function App() {
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
-          max_tokens: 800,
+          max_tokens: 1000,
           messages: [{
             role: 'user',
             content: [
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Data}`, detail: 'low' } },
-              { type: 'text', text: `Gıda ürünü analizi. Marka ve besin değerlerini görselden oku.
-JSON:
-{"found":true,"product":{"name":"","brand":"","category":"","serving_size":"100g"},"nutrition":{"per_100g":{"energy":{"value":0,"unit":"kcal"},"protein":{"value":0,"unit":"g"},"carbohydrates":{"value":0,"unit":"g"},"sugar":{"value":0,"unit":"g"},"fat":{"value":0,"unit":"g"},"saturated_fat":{"value":0,"unit":"g"},"fiber":{"value":0,"unit":"g"},"salt":{"value":0,"unit":"g"}}},"ingredients":{"raw_text":"","additives_list":[]},"nova_group":3}` }
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Data}`, detail: 'auto' } },
+              { type: 'text', text: `Bu gıda ürününü analiz et. Marka ve besin değerlerini görselden oku.
+
+JSON formatında yanıt ver (sadece JSON, başka metin yazma):
+{
+  "found": true,
+  "product": {"name": "Ürün Adı", "brand": "Marka", "category": "Kategori", "serving_size": "100g"},
+  "nutrition": {
+    "per_100g": {
+      "energy": {"value": 0, "unit": "kcal"},
+      "protein": {"value": 0, "unit": "g"},
+      "carbohydrates": {"value": 0, "unit": "g"},
+      "sugar": {"value": 0, "unit": "g"},
+      "fat": {"value": 0, "unit": "g"},
+      "saturated_fat": {"value": 0, "unit": "g"},
+      "fiber": {"value": 0, "unit": "g"},
+      "salt": {"value": 0, "unit": "g"}
+    }
+  },
+  "ingredients": {"raw_text": "içerikler", "additives_list": []},
+  "nova_group": 3
+}` }
             ]
           }]
         })
