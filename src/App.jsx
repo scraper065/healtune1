@@ -125,6 +125,7 @@ function App() {
 
       const data = await response.json();
       const content = data.choices[0].message.content;
+      console.log('OpenAI Response:', content);
 
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
@@ -133,10 +134,27 @@ function App() {
         return;
       }
 
-      const analysisData = JSON.parse(jsonMatch[0]);
+      let analysisData;
+      try {
+        analysisData = JSON.parse(jsonMatch[0]);
+        console.log('Parsed Data:', analysisData);
+      } catch (parseError) {
+        console.error('JSON Parse hatası:', parseError);
+        alert('Veri işlenemedi. Tekrar deneyin.');
+        setIsAnalyzing(false);
+        return;
+      }
 
       if (!analysisData.found) {
         alert('Gıda ürünü tespit edilemedi. Başka bir fotoğraf deneyin.');
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Güvenli erişim için kontrol
+      if (!analysisData.nutrition?.per_100g || !analysisData.product || !analysisData.ingredients) {
+        console.error('Eksik veri:', analysisData);
+        alert('Ürün bilgileri eksik. Daha net bir fotoğraf deneyin.');
         setIsAnalyzing(false);
         return;
       }
