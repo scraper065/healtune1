@@ -183,25 +183,30 @@ function App() {
     if (savedProfile) setUserProfile(JSON.parse(savedProfile));
   }, []);
 
+  // Kamera stream'i video'ya bağla
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [cameraActive]);
+
   // Kamera başlat
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: 'environment',
+          facingMode: { ideal: 'environment' },
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
       });
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setCameraActive(true);
-      }
+      streamRef.current = stream;
+      setCameraActive(true);
+      
     } catch (error) {
       console.error('Kamera hatası:', error);
-      alert('Kamera açılamadı. Lütfen izin verin veya galeriden seçin.');
+      alert('Kamera açılamadı. Lütfen kamera izni verin.');
     }
   };
 
