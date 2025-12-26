@@ -2,73 +2,172 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: #0f172a;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.7);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(51, 65, 85, 0.9);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-* {
-  @apply transition-colors duration-200;
-}
-
-body {
-  @apply bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800;
-  @apply text-white;
-  @apply font-sans;
-}
-
-button {
-  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-slate-900;
-}
-
-input[type="checkbox"] {
-  @apply accent-teal-500;
-}
-
-/* Smooth animations */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
   }
-  to {
-    opacity: 1;
+  50% {
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.5);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
     transform: translateY(0);
   }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
-.animate-slideIn {
-  animation: slideIn 0.3s ease-out;
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
-/* Glassmorphism */
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Glass effect */
 .glass {
-  @apply bg-white/5 backdrop-blur-md border border-white/10;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Active state for buttons */
+.active\:scale-95:active {
+  transform: scale(0.95);
+}
+
+.active\:scale-98:active {
+  transform: scale(0.98);
+}
+
+/* Safe area for mobile */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  nav {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Input focus ring */
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Hide file input */
+input[type="file"] {
+  display: none;
+}
+
+/* Score circle animation */
+.score-circle {
+  position: relative;
+  overflow: hidden;
+}
+
+.score-circle::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--score-color), transparent);
+  animation: rotate 3s linear infinite;
+  opacity: 0.3;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
 /* Gradient text */
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-cyan-400;
+  background: linear-gradient(135deg, #10b981, #14b8a6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Smooth scroll */
-html {
-  @apply scroll-smooth;
-}
-
-/* Focus visible for accessibility */
-:focus-visible {
-  @apply outline-2 outline-offset-2 outline-teal-400;
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
