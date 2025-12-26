@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Search, Heart, Clock, User, Star, Zap, Leaf, Shield, TrendingUp, Plus, Minus, ChevronRight, X, Check, AlertTriangle, Info, Share2, Video, VideoOff } from 'lucide-react';
 import './App.css';
 
