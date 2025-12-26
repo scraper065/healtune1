@@ -363,7 +363,10 @@ function App() {
 
   const analyzeImage = async (imageData) => {
     setIsAnalyzing(true);
+    setScanStatus('analyzing');
+    
     try {
+      // Step 1: AI ile ürün adı ve barkod tespit et
       const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       if (!apiKey) {
         alert('API key tanımlanmadı.');
@@ -386,11 +389,12 @@ function App() {
             role: 'user',
             content: [
               { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Data}`, detail: 'auto' } },
-              { type: 'text', text: `Bu gıda ürününü analiz et. Marka ve besin değerlerini görselden oku.
+              { type: 'text', text: `Bu gıda ürününü analiz et. Barkod numarası görünüyorsa onu da oku.
 
-JSON formatında yanıt ver (sadece JSON, başka metin yazma):
+JSON formatında yanıt ver:
 {
   "found": true,
+  "barcode": "varsa barkod numarası, yoksa null",
   "product": {"name": "Ürün Adı", "brand": "Marka", "category": "Kategori", "serving_size": "100g"},
   "nutrition": {
     "per_100g": {
@@ -404,7 +408,7 @@ JSON formatında yanıt ver (sadece JSON, başka metin yazma):
       "salt": {"value": 0, "unit": "g"}
     }
   },
-  "ingredients": {"raw_text": "içerikler", "additives_list": []},
+  "ingredients": {"raw_text": "içerikler", "additives_list": ["E322", "E471"]},
   "nova_group": 3
 }` }
             ]
@@ -413,19 +417,49 @@ JSON formatında yanıt ver (sadece JSON, başka metin yazma):
       });
 
       const data = await response.json();
-      const content = data.choices[0].message.content;
+      const content = data.choices?.[0]?.message?.content || '';
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       
       if (!jsonMatch) {
-        alert('Ürün analiz edilemedi.');
+        alert('Ürün analiz edilemedi. Lütfen tekrar deneyin.');
         setIsAnalyzing(false);
         return;
       }
 
-      const analysisData = JSON.parse(jsonMatch[0]);
+      let analysisData = JSON.parse(jsonMatch[0]);
+      let dataSource = 'ai';
+      
+      // Step 2: Barkod varsa, önce yerel DB sonra Open Food Facts dene
+      if (analysisData.barcode) {
+        // Yerel DB'de ara
+        const localProduct = findLocalProduct(analysisData.barcode);
+        if (localProduct) {
+          analysisData = {
+            found: true,
+            product: { name: localProduct.name, brand: localProduct.brand, category: localProduct.category, serving_size: '100g' },
+            nutrition: { per_100g: Object.fromEntries(Object.entries(localProduct.nutrition).map(([k,v]) => [k, {value: v, unit: k === 'energy' ? 'kcal' : 'g'}])) },
+            ingredients: { raw_text: localProduct.ingredients || '', additives_list: localProduct.additives || [] },
+            nova_group: localProduct.nova_group
+          };
+          dataSource = 'local';
+        } else {
+          // Open Food Facts API dene
+          const offResult = await fetchProductByBarcode(analysisData.barcode);
+          if (offResult.success) {
+            analysisData = {
+              found: true,
+              product: offResult.product,
+              nutrition: { per_100g: Object.fromEntries(Object.entries(offResult.nutrition).map(([k,v]) => [k, {value: v, unit: k === 'energy' ? 'kcal' : 'g'}])) },
+              ingredients: { raw_text: offResult.ingredients.raw_text, additives_list: offResult.ingredients.additives_list },
+              nova_group: offResult.scores.nova_group
+            };
+            dataSource = 'openfoodfacts';
+          }
+        }
+      }
       
       if (!analysisData.found || !analysisData.nutrition?.per_100g) {
-        alert('Gıda ürünü tespit edilemedi.');
+        alert('Gıda ürünü tespit edilemedi. Ürünü daha net göstermeyi deneyin.');
         setIsAnalyzing(false);
         return;
       }
@@ -435,6 +469,10 @@ JSON formatında yanıt ver (sadece JSON, başka metin yazma):
       const gradeInfo = getGradeInfo(healthScore);
       const brandLower = analysisData.product.brand?.toLowerCase() || '';
       
+      // E-kod analizi (yeni DB'den)
+      const additives = analysisData.ingredients?.additives_list || [];
+      const halalCheck = hasHaramOrSuspicious(additives);
+      
       const fullResult = {
         product: analysisData.product,
         nutrition: nutrition,
@@ -442,15 +480,18 @@ JSON formatında yanıt ver (sadece JSON, başka metin yazma):
         gradeInfo,
         novaGroup: analysisData.nova_group || 3,
         ingredients: analysisData.ingredients,
-        alternatives: analysisData.alternatives || [],
-        isBoycott: boycottBrands.some(b => brandLower.includes(b)),
-        isTurkish: turkishBrands.some(b => brandLower.includes(b)),
-        isHalal: !analysisData.ingredients?.raw_text?.toLowerCase().includes('domuz') && 
-                 !analysisData.ingredients?.raw_text?.toLowerCase().includes('alkol'),
+        additives: additives.map(code => ({ code, ...checkECode(code) })).filter(a => a.name),
+        alternatives: [],
+        isBoycott: isBoycottBrand(brandLower),
+        isTurkish: isTurkishBrand(brandLower),
+        isHalal: !halalCheck.found && !analysisData.ingredients?.raw_text?.toLowerCase().includes('domuz'),
+        halalWarning: halalCheck.found ? halalCheck.info : null,
+        dataSource,
         analyzedAt: new Date().toISOString()
       };
 
       setResult(fullResult);
+      setCurrentTab('result');
       
       // Add to history
       const newHistory = [fullResult, ...history.slice(0, 19)];
@@ -460,7 +501,7 @@ JSON formatında yanıt ver (sadece JSON, başka metin yazma):
       setIsAnalyzing(false);
     } catch (error) {
       console.error('Analiz hatası:', error);
-      alert('Bir hata oluştu.');
+      alert('Bir hata oluştu. Lütfen tekrar deneyin.');
       setIsAnalyzing(false);
     }
   };
