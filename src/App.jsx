@@ -796,53 +796,64 @@ JSON formatında yanıt ver:
           </div>
         </div>
 
-        {/* Status Cards */}
-        <div className="px-4 space-y-3">
-          {/* Halal */}
-          <div className={`flex items-center justify-between p-4 rounded-2xl border ${isHalal ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">☪️</span>
-              <div>
-                <p className={`font-semibold ${isHalal ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {isHalal ? 'Helal Uyumlu' : 'Şüpheli İçerik'}
-                </p>
-                <p className="text-slate-400 text-sm">
-                  {isHalal ? 'Şüpheli içerik bulunamadı' : 'İçerik kontrolü gerekli'}
-                </p>
-              </div>
+        {/* Status Badges - Compact Grid */}
+        <div className="px-4 mb-4">
+          <div className="flex flex-wrap gap-2">
+            {/* Halal Badge */}
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
+              isHalal ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-red-500/15 border border-red-500/30'
+            }`}>
+              <span className="text-lg">☪️</span>
+              <span className={`text-sm font-medium ${isHalal ? 'text-emerald-400' : 'text-red-400'}`}>
+                {isHalal ? 'Helal' : 'Şüpheli'}
+              </span>
+              {isHalal ? <Check size={14} className="text-emerald-400" /> : <AlertTriangle size={14} className="text-red-400" />}
             </div>
-            {isHalal ? <Check className="text-emerald-400" size={24} /> : <AlertTriangle className="text-red-400" size={24} />}
+
+            {/* Turkish Badge */}
+            {isTurkish && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/15 border border-blue-500/30">
+                <span className="text-lg">🇹🇷</span>
+                <span className="text-sm font-medium text-blue-400">Yerli</span>
+                <Check size={14} className="text-blue-400" />
+              </div>
+            )}
+
+            {/* Boycott Badge */}
+            {isBoycott && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/15 border border-red-500/30">
+                <span className="text-lg">✊</span>
+                <span className="text-sm font-medium text-red-400">Boykot</span>
+                <AlertTriangle size={14} className="text-red-400" />
+              </div>
+            )}
+
+            {/* Vegan Badge - if applicable */}
+            {!ingredients?.raw_text?.toLowerCase().match(/et|süt|yumurta|bal|jelatin|peynir|tereyağ/) && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/15 border border-green-500/30">
+                <span className="text-lg">🌱</span>
+                <span className="text-sm font-medium text-green-400">Vegan</span>
+                <Check size={14} className="text-green-400" />
+              </div>
+            )}
+
+            {/* NOVA Badge */}
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
+              novaGroup <= 2 ? 'bg-emerald-500/15 border border-emerald-500/30' : 
+              novaGroup === 3 ? 'bg-amber-500/15 border border-amber-500/30' : 
+              'bg-red-500/15 border border-red-500/30'
+            }`}>
+              <span className="text-lg">🏭</span>
+              <span className={`text-sm font-medium ${
+                novaGroup <= 2 ? 'text-emerald-400' : novaGroup === 3 ? 'text-amber-400' : 'text-red-400'
+              }`}>
+                NOVA {novaGroup}
+              </span>
+            </div>
           </div>
+        </div>
 
-          {/* Turkish */}
-          {isTurkish && (
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🇹🇷</span>
-                <div>
-                  <p className="font-semibold text-blue-400">Yerli Üretim</p>
-                  <p className="text-slate-400 text-sm">Türk markası</p>
-                </div>
-              </div>
-              <Check className="text-blue-400" size={24} />
-            </div>
-          )}
-
-          {/* Boycott Warning */}
-          {isBoycott && (
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-red-500/10 border border-red-500/30">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">✊</span>
-                <div>
-                  <p className="font-semibold text-red-400">Boykot Listesinde</p>
-                  <p className="text-slate-400 text-sm">Bu marka boykot ediliyor</p>
-                </div>
-              </div>
-              <AlertTriangle className="text-red-400" size={24} />
-            </div>
-          )}
-
-          {/* Personal Assessment */}
+        {/* Personal Assessment */}
           {(() => {
             const concerns = [];
             const benefits = [];
