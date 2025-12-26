@@ -1104,46 +1104,12 @@ function App() {
 
       {/* Bottom Navigation */}
       {!result && !cameraActive && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-white/5 px-4 pb-6 pt-3">
-          <div className="flex justify-around items-end relative">
+        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-white/5 px-4 pb-6 pt-4">
+          <div className="flex justify-between items-end relative max-w-sm mx-auto">
             {/* Sol menü öğeleri */}
             <button
-              onClick={() => setCurrentTab('favorites')}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition ${
-                currentTab === 'favorites' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <Heart size={22} />
-              <span className="text-xs font-medium">Favoriler</span>
-            </button>
-            
-            <button
-              onClick={() => setCurrentTab('history')}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition ${
-                currentTab === 'history' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <Clock size={22} />
-              <span className="text-xs font-medium">Geçmiş</span>
-            </button>
-
-            {/* Ortadaki büyük tarama butonu */}
-            <div className="absolute left-1/2 -translate-x-1/2 -top-8">
-              <button
-                onClick={() => {
-                  setCurrentTab('scan');
-                  startCamera();
-                }}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all active:scale-95 border-4 border-slate-900"
-              >
-                <Camera size={28} className="text-white" />
-              </button>
-            </div>
-
-            {/* Sağ menü öğeleri */}
-            <button
               onClick={() => setCurrentTab('scan')}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition ${
+              className={`flex flex-col items-center gap-1 py-2 rounded-xl transition ${
                 currentTab === 'scan' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
@@ -1152,14 +1118,51 @@ function App() {
             </button>
             
             <button
+              onClick={() => setCurrentTab('favorites')}
+              className={`flex flex-col items-center gap-1 py-2 rounded-xl transition ${
+                currentTab === 'favorites' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <Heart size={22} />
+              <span className="text-xs font-medium">Favoriler</span>
+            </button>
+
+            {/* Ortadaki büyük tarama butonu - boşluk için placeholder */}
+            <div className="w-24" />
+
+            {/* Sağ menü öğeleri */}
+            <button
+              onClick={() => setCurrentTab('history')}
+              className={`flex flex-col items-center gap-1 py-2 rounded-xl transition ${
+                currentTab === 'history' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <Clock size={22} />
+              <span className="text-xs font-medium">Geçmiş</span>
+            </button>
+            
+            <button
               onClick={() => setCurrentTab('profile')}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition ${
+              className={`flex flex-col items-center gap-1 py-2 rounded-xl transition ${
                 currentTab === 'profile' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
               <User size={22} />
               <span className="text-xs font-medium">Profil</span>
             </button>
+
+            {/* Ortadaki büyük tarama butonu - floating */}
+            <div className="absolute left-1/2 -translate-x-1/2 -top-12">
+              <button
+                onClick={() => {
+                  setCurrentTab('scan');
+                  startCamera();
+                }}
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-xl shadow-emerald-500/40 hover:shadow-emerald-500/60 transition-all active:scale-95 border-4 border-slate-900"
+              >
+                <Camera size={28} className="text-white" />
+              </button>
+            </div>
           </div>
         </nav>
       )}
