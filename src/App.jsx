@@ -670,12 +670,37 @@ function App() {
               <p className="text-slate-400 text-sm leading-relaxed">{ingredients.raw_text}</p>
               
               {ingredients.additives_list?.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {ingredients.additives_list.map((code, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-xs font-medium">
-                      {code}
-                    </span>
-                  ))}
+                <div className="mt-4">
+                  <p className="text-slate-500 text-xs mb-2">Katkı Maddeleri:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {ingredients.additives_list.map((code, idx) => {
+                      const eCode = eCodeDatabase[code.toUpperCase()];
+                      const statusColors = {
+                        halal: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                        haram: 'bg-red-500/20 text-red-300 border-red-500/30',
+                        suspicious: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                        unknown: 'bg-slate-500/20 text-slate-300 border-slate-500/30'
+                      };
+                      const status = eCode?.status || 'unknown';
+                      const statusLabels = { halal: '✓', haram: '✗', suspicious: '?', unknown: '' };
+                      
+                      return (
+                        <div key={idx} className={`px-3 py-1.5 rounded-xl text-xs font-medium border ${statusColors[status]}`}>
+                          <span className="font-semibold">{code}</span>
+                          {eCode && (
+                            <span className="ml-1 opacity-75">
+                              {statusLabels[status]} {eCode.name}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex gap-4 mt-3 text-xs">
+                    <span className="text-emerald-400">✓ Helal</span>
+                    <span className="text-amber-400">? Şüpheli</span>
+                    <span className="text-red-400">✗ Haram</span>
+                  </div>
                 </div>
               )}
             </div>
