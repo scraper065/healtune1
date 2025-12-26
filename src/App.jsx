@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Camera, Search, Heart, Clock, User, Star, Zap, Leaf, Shield, TrendingUp, Plus, Minus, ChevronRight, X, Check, AlertTriangle, Info, Share2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, Search, Heart, Clock, User, Star, Zap, Leaf, Shield, TrendingUp, Plus, Minus, ChevronRight, X, Check, AlertTriangle, Info, Share2, Video, VideoOff } from 'lucide-react';
 import './App.css';
 
 // Utility functions
@@ -158,7 +158,7 @@ function App() {
   const [currentTab, setCurrentTab] = useState('scan');
   const [result, setResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
   const [portion, setPortion] = useState(1);
   const [favorites, setFavorites] = useState([]);
   const [history, setHistory] = useState([]);
@@ -169,6 +169,10 @@ function App() {
     diet: [],
     goals: []
   });
+  
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('gidax_favorites');
@@ -178,6 +182,57 @@ function App() {
     if (savedHistory) setHistory(JSON.parse(savedHistory));
     if (savedProfile) setUserProfile(JSON.parse(savedProfile));
   }, []);
+
+  // Kamera başlat
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        setCameraActive(true);
+      }
+    } catch (error) {
+      console.error('Kamera hatası:', error);
+      alert('Kamera açılamadı. Lütfen izin verin veya galeriden seçin.');
+    }
+  };
+
+  // Kamera kapat
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
+  };
+
+  // Ekrana dokunulduğunda frame yakala ve analiz et
+  const captureAndAnalyze = () => {
+    if (!videoRef.current || !canvasRef.current || isAnalyzing) return;
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    stopCamera();
+    analyzeImage(imageData);
+  };
 
   const analyzeImage = async (imageData) => {
     setIsAnalyzing(true);
@@ -308,92 +363,147 @@ function App() {
   // Render functions
   const renderScanTab = () => (
     <div className="flex-1 overflow-auto pb-24">
-      {/* Hero Scanner */}
-      <div className="px-4 pt-6 pb-8">
-        <div className="relative bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-[32px] p-8 border border-white/10 backdrop-blur-xl overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-full blur-2xl" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-400/20 to-transparent rounded-full blur-2xl" />
-          
-          <div className="relative text-center">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-              <Camera size={36} className="text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Ürün Tara</h2>
-            <p className="text-slate-400 text-sm mb-6">Fotoğraf çek veya galeriden seç</p>
-            
-            <div className="flex gap-3 justify-center">
-              <label className="flex-1 max-w-[160px] py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl font-semibold text-white cursor-pointer hover:shadow-lg hover:shadow-emerald-500/25 transition-all active:scale-95">
-                <input type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
-                <Camera size={20} className="inline mr-2" />
-                Kamera
-              </label>
-              <label className="flex-1 max-w-[160px] py-4 px-6 bg-white/10 border border-white/20 rounded-2xl font-semibold text-white cursor-pointer hover:bg-white/15 transition-all active:scale-95">
-                <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-                <Search size={20} className="inline mr-2" />
-                Galeri
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Barcode Input */}
-      <div className="px-4 mb-6">
-        <div className="bg-slate-800/50 rounded-2xl p-4 border border-white/5">
-          <p className="text-slate-400 text-sm mb-3">veya barkod numarası girin:</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={barcodeInput}
-              onChange={(e) => setBarcodeInput(e.target.value)}
-              placeholder="8690504055020"
-              className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
-            />
-            <button className="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white font-semibold">
-              <Search size={20} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Test */}
-      <div className="px-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Zap size={18} className="text-amber-400" />
-          <h3 className="text-white font-semibold">Hızlı Test</h3>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {quickTestProducts.map((product, idx) => (
-            <button
-              key={idx}
-              className="bg-slate-800/50 hover:bg-slate-800 border border-white/5 rounded-2xl p-4 text-left transition-all active:scale-98 group"
+      {/* Canlı Kamera Görünümü */}
+      {cameraActive ? (
+        <div className="fixed inset-0 bg-black z-40 flex flex-col">
+          {/* Kamera Header */}
+          <div className="absolute top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
+            <button 
+              onClick={stopCamera}
+              className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{product.icon}</span>
-                  <div>
-                    <p className="text-white font-medium text-sm">{product.name}</p>
-                    <p className="text-slate-500 text-xs">{product.brand}</p>
-                  </div>
-                </div>
-                <span 
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                  style={{ backgroundColor: product.color }}
-                >
-                  {product.grade}
-                </span>
-              </div>
+              <X size={20} className="text-white" />
             </button>
-          ))}
+            <span className="text-white font-medium">Ürünü Çerçevele</span>
+            <div className="w-10" />
+          </div>
+          
+          {/* Video Stream */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+            onClick={captureAndAnalyze}
+          />
+          
+          {/* Tarama Çerçevesi */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-72 h-72 border-2 border-emerald-400 rounded-3xl relative">
+              <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-emerald-400 rounded-tl-xl" />
+              <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-emerald-400 rounded-tr-xl" />
+              <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-emerald-400 rounded-bl-xl" />
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-emerald-400 rounded-br-xl" />
+            </div>
+          </div>
+          
+          {/* Alt Bilgi */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-emerald-500/20 border-4 border-emerald-400 flex items-center justify-center animate-pulse">
+                <Camera size={28} className="text-emerald-400" />
+              </div>
+              <p className="text-white font-semibold mb-1">Ekrana Dokun ve Tara</p>
+              <p className="text-slate-400 text-sm">Ürünü çerçeveye al ve ekrana dokun</p>
+            </div>
+          </div>
+          
+          {/* Hidden Canvas */}
+          <canvas ref={canvasRef} className="hidden" />
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Hero Scanner */}
+          <div className="px-4 pt-6 pb-8">
+            <div className="relative bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-[32px] p-8 border border-white/10 backdrop-blur-xl overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-full blur-2xl" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-400/20 to-transparent rounded-full blur-2xl" />
+              
+              <div className="relative text-center">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                  <Camera size={36} className="text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Ürün Tara</h2>
+                <p className="text-slate-400 text-sm mb-6">Kamerayı aç, ürünü çerçevele, ekrana dokun</p>
+                
+                <div className="flex gap-3 justify-center">
+                  <button 
+                    onClick={startCamera}
+                    className="flex-1 max-w-[160px] py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl font-semibold text-white hover:shadow-lg hover:shadow-emerald-500/25 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Video size={20} />
+                    Kamera
+                  </button>
+                  <label className="flex-1 max-w-[160px] py-4 px-6 bg-white/10 border border-white/20 rounded-2xl font-semibold text-white cursor-pointer hover:bg-white/15 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                    <Search size={20} />
+                    Galeri
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Barcode Input */}
+          <div className="px-4 mb-6">
+            <div className="bg-slate-800/50 rounded-2xl p-4 border border-white/5">
+              <p className="text-slate-400 text-sm mb-3">veya barkod numarası girin:</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value)}
+                  placeholder="8690504055020"
+                  className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+                />
+                <button className="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white font-semibold">
+                  <Search size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Test */}
+          <div className="px-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Zap size={18} className="text-amber-400" />
+              <h3 className="text-white font-semibold">Hızlı Test</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {quickTestProducts.map((product, idx) => (
+                <button
+                  key={idx}
+                  className="bg-slate-800/50 hover:bg-slate-800 border border-white/5 rounded-2xl p-4 text-left transition-all active:scale-98 group"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{product.icon}</span>
+                      <div>
+                        <p className="text-white font-medium text-sm">{product.name}</p>
+                        <p className="text-slate-500 text-xs">{product.brand}</p>
+                      </div>
+                    </div>
+                    <span 
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                      style={{ backgroundColor: product.color }}
+                    >
+                      {product.grade}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
 
       {/* Info Text */}
-      <div className="px-4 mb-6">
-        <p className="text-center text-slate-500 text-xs">
-          🤖 Barkod bulamazsa otomatik olarak AI görsel analiz yapar
-        </p>
-      </div>
+          <div className="px-4 mb-6">
+            <p className="text-center text-slate-500 text-xs">
+              🤖 Ekrana dokunarak ürünü tara
+            </p>
+          </div>
+        </>
+      )}
 
       {/* Analyzing Overlay */}
       {isAnalyzing && (
