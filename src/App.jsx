@@ -669,18 +669,37 @@ JSON formatında yanıt ver:
 
       {/* Analyzing Overlay */}
       {isAnalyzing && (
-        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-slate-900/98 backdrop-blur-lg flex items-center justify-center z-50">
           <div className="text-center px-6 animate-fade-in">
-            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center animate-pulse shadow-lg shadow-emerald-500/30">
-              <Zap size={30} className="text-white" />
+            {/* Animated Logo */}
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              {/* Outer ring */}
+              <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 animate-ping" />
+              {/* Middle ring */}
+              <div className="absolute inset-2 rounded-full border-4 border-teal-400/30 animate-pulse" />
+              {/* Inner circle with icon */}
+              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-emerald-500/40">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="animate-pulse">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="white" fillOpacity="0.2"/>
+                  <path d="M12 6v6l4 2" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  <circle cx="12" cy="12" r="2" fill="white"/>
+                </svg>
+              </div>
             </div>
-            <p className="text-white font-semibold text-lg mb-2">AI Analiz Ediliyor</p>
-            <p className="text-slate-400 text-sm">Birkaç saniye sürebilir...</p>
-            <div className="mt-6 flex justify-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: '0ms'}} />
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: '150ms'}} />
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: '300ms'}} />
+            
+            {/* Text */}
+            <h3 className="text-white font-bold text-xl mb-2">Analiz Ediliyor</h3>
+            <p className="text-slate-400 text-sm mb-1">Yapay zeka ürünü inceliyor...</p>
+            
+            {/* Progress bar */}
+            <div className="w-48 h-1.5 bg-slate-800 rounded-full mx-auto mt-5 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full animate-progress" />
             </div>
+            
+            {/* Tips */}
+            <p className="text-slate-500 text-xs mt-6 max-w-[200px] mx-auto">
+              💡 Besin değerlerini, katkı maddelerini ve sağlık skorunu hesaplıyoruz
+            </p>
           </div>
         </div>
       )}
@@ -704,7 +723,7 @@ JSON formatında yanıt ver:
               onClick={() => {
                 if (navigator.share) {
                   navigator.share({
-                    title: `${product.name} - GidaX Analizi`,
+                    title: `${product.name} - Healtune Analizi`,
                     text: `${product.name} (${product.brand}): Sağlık Skoru ${healthScore}/100 - ${gradeInfo.label}`,
                     url: window.location.href
                   });
@@ -1329,16 +1348,18 @@ JSON formatında yanıt ver:
       {/* Header */}
       <header className="px-4 py-4 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center relative overflow-hidden">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#10B981"/>
-              <circle cx="12" cy="10" r="4" fill="white"/>
-              <path d="M12 7.5c0-.28.22-.5.5-.5.28 0 .5.22.5.5v1.5h1c.28 0 .5.22.5.5s-.22.5-.5.5h-1v1.5c0 .28-.22.5-.5.5-.28 0-.5-.22-.5-.5V10h-1c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h1V7.5z" fill="#10B981"/>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 flex items-center justify-center relative overflow-hidden shadow-lg shadow-emerald-500/20">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" fill="white" fillOpacity="0.15"/>
+              <path d="M12 4C7.58 4 4 7.58 4 12s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" fill="white" fillOpacity="0.3"/>
+              <path d="M12 8v4l3 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <path d="M12 6v1M18 12h-1M12 18v-1M6 12h1" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white">GidaX</h1>
-            <p className="text-xs text-slate-500">AI Gıda Analizi v4.0</p>
+            <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Healtune</h1>
+            <p className="text-xs text-slate-500">AI Gıda Analizi</p>
           </div>
         </div>
         <button className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
