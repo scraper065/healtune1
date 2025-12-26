@@ -103,7 +103,9 @@ function App() {
   const [history, setHistory] = useState([]);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [scanStatus, setScanStatus] = useState('idle');
-  const [toast, setToast] = useState(null); // {type: 'error'|'success'|'warning'|'info', message: string}
+  const [toast, setToast] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
   const [userProfile, setUserProfile] = useState({
     diseases: [],
     sensitivities: [],
@@ -117,19 +119,56 @@ function App() {
   const scanIntervalRef = useRef(null);
   const lastScanRef = useRef(0);
 
+  // Onboarding slides
+  const onboardingSlides = [
+    {
+      icon: '📸',
+      title: 'Ürünü Tara',
+      description: 'Kameranı aç ve gıda ürününün üzerine tut. AI otomatik olarak ürünü tanıyacak.',
+      color: 'from-emerald-500 to-teal-500'
+    },
+    {
+      icon: '🔍',
+      title: 'Detaylı Analiz',
+      description: 'Besin değerleri, katkı maddeleri, sağlık skoru ve daha fazlasını anında gör.',
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      icon: '☪️',
+      title: 'Helal & Boykot Kontrolü',
+      description: '200+ E-kodu veritabanı ile helal uygunluğunu ve boykot markalarını kontrol et.',
+      color: 'from-amber-500 to-orange-500'
+    },
+    {
+      icon: '💪',
+      title: 'Kişisel Sağlık',
+      description: 'Profilinde hastalık ve diyetini belirt, sana özel uyarılar al.',
+      color: 'from-purple-500 to-pink-500'
+    }
+  ];
+
   // Toast göster
   const showToast = (type, message, duration = 3000) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), duration);
   };
 
+  // Onboarding tamamla
+  const completeOnboarding = () => {
+    localStorage.setItem('gidax_onboarding_done', 'true');
+    setShowOnboarding(false);
+  };
+
   useEffect(() => {
     const savedFavorites = localStorage.getItem('gidax_favorites');
     const savedHistory = localStorage.getItem('gidax_history');
     const savedProfile = localStorage.getItem('gidax_profile');
+    const onboardingDone = localStorage.getItem('gidax_onboarding_done');
+    
     if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
     if (savedHistory) setHistory(JSON.parse(savedHistory));
     if (savedProfile) setUserProfile(JSON.parse(savedProfile));
+    if (!onboardingDone) setShowOnboarding(true);
   }, []);
 
   // Kamera başlat
@@ -1223,6 +1262,65 @@ JSON formatında yanıt ver:
             <p className="text-white text-sm font-medium flex-1">{toast.message}</p>
             <button onClick={() => setToast(null)} className="flex-shrink-0 p-1">
               <X size={16} className="text-white/70" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding Screen */}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-[200] bg-slate-900 flex flex-col">
+          {/* Skip button */}
+          <div className="absolute top-4 right-4 safe-area-top z-10">
+            <button 
+              onClick={completeOnboarding}
+              className="text-slate-400 text-sm px-3 py-1"
+            >
+              Atla
+            </button>
+          </div>
+
+          {/* Slide Content */}
+          <div className="flex-1 flex flex-col items-center justify-center px-8">
+            <div className={`w-28 h-28 rounded-3xl bg-gradient-to-br ${onboardingSlides[onboardingStep].color} flex items-center justify-center mb-8 shadow-2xl`}>
+              <span className="text-5xl">{onboardingSlides[onboardingStep].icon}</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-4 text-center">
+              {onboardingSlides[onboardingStep].title}
+            </h2>
+            <p className="text-slate-400 text-center text-base leading-relaxed max-w-xs">
+              {onboardingSlides[onboardingStep].description}
+            </p>
+          </div>
+
+          {/* Dots & Button */}
+          <div className="px-8 pb-12 safe-area-bottom">
+            {/* Dots */}
+            <div className="flex justify-center gap-2 mb-8">
+              {onboardingSlides.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`h-2 rounded-full transition-all ${
+                    idx === onboardingStep 
+                      ? 'w-8 bg-emerald-400' 
+                      : 'w-2 bg-slate-700'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Button */}
+            <button
+              onClick={() => {
+                if (onboardingStep < onboardingSlides.length - 1) {
+                  setOnboardingStep(onboardingStep + 1);
+                } else {
+                  completeOnboarding();
+                }
+              }}
+              className={`w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r ${onboardingSlides[onboardingStep].color} active:scale-[0.98] transition-transform`}
+            >
+              {onboardingStep < onboardingSlides.length - 1 ? 'Devam Et' : 'Başla'}
             </button>
           </div>
         </div>
