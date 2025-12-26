@@ -264,10 +264,17 @@ function App() {
             role: 'user',
             content: [
               { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Data}` } },
-              { type: 'text', text: `Bu gıda ürününü analiz et. JSON formatında yanıt ver:
+              { type: 'text', text: `Bu gıda ürününü analiz et. Görseldeki ürünün MARKA adını, ürün adını ve besin değerlerini dikkatlice oku.
+
+ÖNEMLİ: 
+- Marka adını görselden tam olarak oku (Coca-Cola, Pepsi, Ülker, Eti vb.)
+- Eğer marka görünmüyorsa "Bilinmiyor" yaz
+- Besin değerlerini görselden oku, yoksa tahmin et
+
+JSON formatında yanıt ver:
 {
   "found": true,
-  "product": { "name": "Türkçe ad", "brand": "Marka", "category": "Kategori", "serving_size": "100g" },
+  "product": { "name": "Ürün Adı Türkçe", "brand": "Marka Adı", "category": "Kategori", "serving_size": "100g" },
   "nutrition": {
     "per_100g": {
       "energy": {"value": 0, "unit": "kcal"},
@@ -1104,65 +1111,64 @@ function App() {
 
       {/* Bottom Navigation */}
       {!result && !cameraActive && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-white/5 px-4 pb-6 pt-4">
-          <div className="flex justify-between items-end relative max-w-sm mx-auto">
-            {/* Sol menü öğeleri */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-white/5 pb-6 pt-3">
+          <div className="grid grid-cols-5 items-center max-w-md mx-auto">
+            {/* Ana Sayfa */}
             <button
               onClick={() => setCurrentTab('scan')}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl transition ${
-                currentTab === 'scan' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+              className={`flex flex-col items-center gap-1 py-2 transition ${
+                currentTab === 'scan' ? 'text-emerald-400' : 'text-slate-500'
               }`}
             >
               <Search size={22} />
-              <span className="text-xs font-medium">Ana Sayfa</span>
+              <span className="text-[10px]">Ana Sayfa</span>
             </button>
             
+            {/* Favoriler */}
             <button
               onClick={() => setCurrentTab('favorites')}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl transition ${
-                currentTab === 'favorites' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+              className={`flex flex-col items-center gap-1 py-2 transition ${
+                currentTab === 'favorites' ? 'text-emerald-400' : 'text-slate-500'
               }`}
             >
               <Heart size={22} />
-              <span className="text-xs font-medium">Favoriler</span>
+              <span className="text-[10px]">Favoriler</span>
             </button>
 
-            {/* Ortadaki büyük tarama butonu - boşluk için placeholder */}
-            <div className="w-24" />
+            {/* Ortadaki Kamera Butonu */}
+            <button
+              onClick={() => {
+                setCurrentTab('scan');
+                startCamera();
+              }}
+              className="flex justify-center -mt-8"
+            >
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 active:scale-95 border-4 border-slate-900">
+                <Camera size={24} className="text-white" />
+              </div>
+            </button>
 
-            {/* Sağ menü öğeleri */}
+            {/* Geçmiş */}
             <button
               onClick={() => setCurrentTab('history')}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl transition ${
-                currentTab === 'history' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+              className={`flex flex-col items-center gap-1 py-2 transition ${
+                currentTab === 'history' ? 'text-emerald-400' : 'text-slate-500'
               }`}
             >
               <Clock size={22} />
-              <span className="text-xs font-medium">Geçmiş</span>
+              <span className="text-[10px]">Geçmiş</span>
             </button>
             
+            {/* Profil */}
             <button
               onClick={() => setCurrentTab('profile')}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl transition ${
-                currentTab === 'profile' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'
+              className={`flex flex-col items-center gap-1 py-2 transition ${
+                currentTab === 'profile' ? 'text-emerald-400' : 'text-slate-500'
               }`}
             >
               <User size={22} />
-              <span className="text-xs font-medium">Profil</span>
+              <span className="text-[10px]">Profil</span>
             </button>
-
-            {/* Ortadaki büyük tarama butonu - floating */}
-            <div className="absolute left-1/2 -translate-x-1/2 -top-12">
-              <button
-                onClick={() => {
-                  setCurrentTab('scan');
-                  startCamera();
-                }}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-xl shadow-emerald-500/40 hover:shadow-emerald-500/60 transition-all active:scale-95 border-4 border-slate-900"
-              >
-                <Camera size={28} className="text-white" />
-              </button>
-            </div>
           </div>
         </nav>
       )}
