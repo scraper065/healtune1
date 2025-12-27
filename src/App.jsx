@@ -151,6 +151,8 @@ function App() {
     diet: [],
     goals: []
   });
+  const [showShareCard, setShowShareCard] = useState(false);
+  const shareCardRef = useRef(null);
 
   // Info modal içerikleri
   const infoContents = {
@@ -1027,29 +1029,7 @@ JSON formatında yanıt ver:
           <span className="text-white font-semibold">Analiz Sonucu</span>
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => {
-                const shareText = `🍎 ${product.name} (${product.brand})
-
-📊 Sağlık Skoru: ${healthScore}/100 (${gradeInfo.label})
-🔤 Nutri-Score: ${gradeInfo.grade}
-🏭 NOVA: ${novaGroup}
-${isHalal ? '☪️ Helal Uyumlu' : '⚠️ Şüpheli İçerik'}
-${isTurkish ? '🇹🇷 Yerli Üretim' : ''}
-${isBoycott ? '✊ Boykot Listesinde' : ''}
-
-📱 Healtune ile analiz edildi`;
-
-                if (navigator.share) {
-                  navigator.share({
-                    title: `${product.name} - Healtune`,
-                    text: shareText,
-                    url: 'https://healtune.app'
-                  });
-                } else {
-                  navigator.clipboard.writeText(shareText);
-                  showToast('success', 'Panoya kopyalandı!');
-                }
-              }}
+              onClick={() => setShowShareCard(true)}
               className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
             >
               <Share2 size={20} />
@@ -1935,6 +1915,130 @@ ${isBoycott ? '✊ Boykot Listesinde' : ''}
             <button onClick={() => setToast(null)} className="flex-shrink-0 p-1">
               <X size={16} className="text-white/70" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Share Card Modal */}
+      {showShareCard && result && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4" onClick={() => setShowShareCard(false)}>
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div className="relative w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            {/* Share Card */}
+            <div 
+              ref={shareCardRef}
+              className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-3xl p-6 border border-white/10 shadow-2xl"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">H</span>
+                  </div>
+                  <span className="text-white font-semibold text-sm">Healtune</span>
+                </div>
+                <div className="flex gap-1">
+                  {result.isHalal && <span className="text-lg">☪️</span>}
+                  {result.isTurkish && <span className="text-lg">🇹🇷</span>}
+                  {result.isBoycott && <span className="text-lg">✊</span>}
+                </div>
+              </div>
+
+              {/* Product */}
+              <div className="text-center mb-6">
+                <span className="text-5xl mb-3 block">{getCategoryIcon(result.product.category)}</span>
+                <h3 className="text-white font-bold text-xl">{result.product.name}</h3>
+                <p className="text-slate-400">{result.product.brand}</p>
+              </div>
+
+              {/* Score Circle */}
+              <div className="flex justify-center mb-6">
+                <div 
+                  className="w-28 h-28 rounded-full flex flex-col items-center justify-center border-4"
+                  style={{ 
+                    borderColor: result.gradeInfo.color, 
+                    backgroundColor: `${result.gradeInfo.color}15` 
+                  }}
+                >
+                  <span className="text-4xl font-bold text-white">{result.healthScore}</span>
+                  <span className="text-xs text-slate-400">/ 100</span>
+                </div>
+              </div>
+
+              {/* Grade */}
+              <div className="text-center mb-6">
+                <span 
+                  className="inline-block px-4 py-2 rounded-full text-white font-bold text-sm"
+                  style={{ backgroundColor: result.gradeInfo.color }}
+                >
+                  {result.gradeInfo.label}
+                </span>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                <div className="bg-slate-800/50 rounded-xl p-2 text-center">
+                  <p className="text-slate-500 text-[10px]">Şeker</p>
+                  <p className="text-white font-bold text-sm">{result.nutrition.sugar?.value || 0}g</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-xl p-2 text-center">
+                  <p className="text-slate-500 text-[10px]">Yağ</p>
+                  <p className="text-white font-bold text-sm">{result.nutrition.fat?.value || 0}g</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-xl p-2 text-center">
+                  <p className="text-slate-500 text-[10px]">Protein</p>
+                  <p className="text-white font-bold text-sm">{result.nutrition.protein?.value || 0}g</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-xl p-2 text-center">
+                  <p className="text-slate-500 text-[10px]">NOVA</p>
+                  <p className="text-white font-bold text-sm">{result.novaGroup}</p>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="text-center pt-2 border-t border-white/5">
+                <p className="text-slate-500 text-xs">healtune.app</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => {
+                  const shareText = `🍎 ${result.product.name} (${result.product.brand})
+
+📊 Sağlık Skoru: ${result.healthScore}/100 (${result.gradeInfo.label})
+🔤 Nutri-Score: ${result.gradeInfo.grade}
+🏭 NOVA: ${result.novaGroup}
+${result.isHalal ? '☪️ Helal Uyumlu' : '⚠️ Şüpheli İçerik'}
+${result.isTurkish ? '🇹🇷 Yerli Üretim' : ''}
+${result.isBoycott ? '✊ Boykot Listesinde' : ''}
+
+📱 Healtune ile analiz edildi
+🔗 healtune.app`;
+
+                  if (navigator.share) {
+                    navigator.share({
+                      title: `${result.product.name} - Healtune`,
+                      text: shareText,
+                    });
+                  } else {
+                    navigator.clipboard.writeText(shareText);
+                    showToast('success', 'Metin panoya kopyalandı!');
+                  }
+                }}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition"
+              >
+                <Share2 size={18} />
+                Paylaş
+              </button>
+              <button
+                onClick={() => setShowShareCard(false)}
+                className="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
         </div>
       )}
