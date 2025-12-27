@@ -309,6 +309,8 @@ ${result.status === 'haram' ? '⚠️ Bu katkı maddesi helal değildir. Tüketm
   const streamRef = useRef(null);
   const scanIntervalRef = useRef(null);
   const lastScanRef = useRef(0);
+  const deferredPromptRef = useRef(null);
+  const [canInstall, setCanInstall] = useState(false);
 
   // Onboarding slides
   const onboardingSlides = [
@@ -350,6 +352,20 @@ ${result.status === 'haram' ? '⚠️ Bu katkı maddesi helal değildir. Tüketm
     setShowOnboarding(false);
   };
 
+  // PWA Install
+  const handleInstallClick = async () => {
+    if (!deferredPromptRef.current) return;
+    
+    deferredPromptRef.current.prompt();
+    const { outcome } = await deferredPromptRef.current.userChoice;
+    
+    if (outcome === 'accepted') {
+      showToast('success', 'Healtune ana ekrana eklendi! 🎉');
+      setCanInstall(false);
+    }
+    deferredPromptRef.current = null;
+  };
+
   useEffect(() => {
     const savedFavorites = localStorage.getItem('gidax_favorites');
     const savedHistory = localStorage.getItem('gidax_history');
@@ -360,6 +376,26 @@ ${result.status === 'haram' ? '⚠️ Bu katkı maddesi helal değildir. Tüketm
     if (savedHistory) setHistory(JSON.parse(savedHistory));
     if (savedProfile) setUserProfile(JSON.parse(savedProfile));
     if (!onboardingDone) setShowOnboarding(true);
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => console.log('SW registered:', reg.scope))
+        .catch((err) => console.log('SW registration failed:', err));
+    }
+
+    // PWA Install Prompt
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      deferredPromptRef.current = e;
+      setCanInstall(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   // Kamera başlat
@@ -1342,6 +1378,51 @@ ${isBoycott ? '✊ Boykot Listesinde' : ''}
           })()}
         </div>
 
+        {/* Alternative Products */}
+        {healthScore < 60 && (
+          <div className="px-4 mt-4">
+            <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-2xl p-5 border border-emerald-500/20">
+              <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                <span>💡</span> Daha Sağlıklı Alternatifler
+              </h3>
+              <div className="space-y-2">
+                {(() => {
+                  const alternatives = [];
+                  const cat = product.category?.toLowerCase() || '';
+                  
+                  if (cat.includes('içecek') || cat.includes('beverage')) {
+                    alternatives.push({ name: 'Maden Suyu', brand: 'Kızılay', score: 95, icon: '💧' });
+                    alternatives.push({ name: 'Ayran', brand: 'Sütaş', score: 85, icon: '🥛' });
+                  } else if (cat.includes('atıştırmalık') || cat.includes('çikolata') || cat.includes('snack')) {
+                    alternatives.push({ name: 'Kuru Meyve', brand: 'Tadım', score: 80, icon: '🍎' });
+                    alternatives.push({ name: 'Çiğ Badem', brand: 'Peyman', score: 88, icon: '🥜' });
+                  } else if (cat.includes('süt')) {
+                    alternatives.push({ name: 'Sade Yoğurt', brand: 'Sütaş', score: 90, icon: '🥛' });
+                    alternatives.push({ name: 'Lor Peyniri', brand: 'Pınar', score: 85, icon: '🧀' });
+                  } else {
+                    alternatives.push({ name: 'Tam Buğday Ekmek', brand: 'Uno', score: 75, icon: '🍞' });
+                    alternatives.push({ name: 'Taze Meyve', brand: '-', score: 95, icon: '🍎' });
+                  }
+                  
+                  return alternatives.map((alt, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-slate-800/40 rounded-xl p-3">
+                      <span className="text-xl">{alt.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-white text-sm font-medium">{alt.name}</p>
+                        <p className="text-slate-500 text-xs">{alt.brand}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-emerald-400 font-bold text-sm">{alt.score}</p>
+                        <p className="text-emerald-400/60 text-xs">+{alt.score - healthScore}</p>
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Portion Calculator */}
         <div className="px-4 mt-6">
           <div className="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
@@ -1720,6 +1801,60 @@ ${isBoycott ? '✊ Boykot Listesinde' : ''}
             <p className="text-white text-2xl font-bold">{favorites.length}</p>
           </div>
         </div>
+
+        {/* PWA Install Button */}
+        {canInstall && (
+          <button
+            onClick={handleInstallClick}
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition-transform mb-2"
+          >
+            <Plus size={20} />
+            Ana Ekrana Ekle
+          </button>
+        )}
+
+        {/* Daily Summary */}
+        {history.length > 0 && (
+          <div className="bg-slate-800/50 rounded-2xl p-5 border border-white/5 mb-2">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <span>📊</span> Bugünkü Özet
+            </h3>
+            {(() => {
+              const today = new Date().toDateString();
+              const todayItems = history.filter(h => new Date(h.analyzedAt).toDateString() === today);
+              const avgScore = todayItems.length > 0 
+                ? Math.round(todayItems.reduce((sum, h) => sum + h.healthScore, 0) / todayItems.length)
+                : 0;
+              const healthyCount = todayItems.filter(h => h.healthScore >= 65).length;
+              const unhealthyCount = todayItems.filter(h => h.healthScore < 50).length;
+              
+              return (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">Taranan ürün</span>
+                    <span className="text-white font-semibold">{todayItems.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">Ortalama skor</span>
+                    <span className={`font-semibold ${avgScore >= 65 ? 'text-emerald-400' : avgScore >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                      {avgScore || '-'}/100
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">Sağlıklı seçim</span>
+                    <span className="text-emerald-400 font-semibold">{healthyCount} ✓</span>
+                  </div>
+                  {unhealthyCount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400 text-sm">Dikkat gerektiren</span>
+                      <span className="text-red-400 font-semibold">{unhealthyCount} ⚠️</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         {renderOptionGroup('🏥 Sağlık Durumları', 'diseases', profileOptions.diseases)}
         {renderOptionGroup('⚠️ Hassasiyetler & Alerjiler', 'sensitivities', profileOptions.sensitivities)}
