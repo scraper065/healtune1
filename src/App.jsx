@@ -269,7 +269,38 @@ Puan artıran faktörler:
 • Tofu, tempeh
 • Baklagiller
 • Kuruyemişler`
+    },
+    ecode_result: {
+      icon: '🔬',
+      title: 'E-Kod Sonucu',
+      content: '' // Dynamic content
     }
+  };
+
+  // E-kod sonucu için dinamik içerik
+  const getEcodeModalContent = () => {
+    if (!barcodeInput) return null;
+    const result = checkECode(barcodeInput);
+    if (!result.name) return null;
+    
+    const statusEmoji = result.status === 'halal' ? '✅' : result.status === 'haram' ? '❌' : '⚠️';
+    const statusText = result.status === 'halal' ? 'HELAL' : result.status === 'haram' ? 'HARAM' : 'ŞÜPHELİ';
+    const statusColor = result.status === 'halal' ? 'text-emerald-400' : result.status === 'haram' ? 'text-red-400' : 'text-amber-400';
+    
+    return {
+      icon: statusEmoji,
+      title: barcodeInput,
+      content: `${result.name}
+
+${statusEmoji} Durum: ${statusText}
+
+📝 Açıklama: ${result.desc}
+
+${result.status === 'haram' ? '⚠️ Bu katkı maddesi helal değildir. Tüketmemeniz önerilir.' : 
+  result.status === 'suspicious' ? '⚠️ Bu katkı maddesinin kaynağı belirsizdir. Üreticiye danışın.' : 
+  '✅ Bu katkı maddesi genellikle helal kabul edilir.'}`,
+      statusColor
+    };
   };
   
   const videoRef = useRef(null);
@@ -828,6 +859,45 @@ JSON formatında yanıt ver:
             </label>
           </div>
 
+          {/* E-Code Scanner */}
+          <div className="px-4 mb-5">
+            <div className="bg-slate-800/40 rounded-2xl p-4 border border-white/5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <span className="text-lg">🔬</span>
+                </div>
+                <div>
+                  <h4 className="text-white font-medium text-sm">E-Kod Sorgula</h4>
+                  <p className="text-slate-500 text-xs">Katkı maddesi helal mi?</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Örn: E471"
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value.toUpperCase())}
+                  className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500/50"
+                />
+                <button
+                  onClick={() => {
+                    if (barcodeInput) {
+                      const result = checkECode(barcodeInput);
+                      if (result.name) {
+                        setInfoModal('ecode_result');
+                      } else {
+                        showToast('warning', 'E-kod bulunamadı. Örn: E471, E322');
+                      }
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-medium text-sm transition"
+                >
+                  Sorgula
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Test Section */}
           <div className="px-4">
             <div className="flex items-center gap-2 mb-3">
@@ -1061,6 +1131,127 @@ JSON formatında yanıt ver:
                 NOVA {novaGroup}
               </span>
             </button>
+          </div>
+        </div>
+
+        {/* Nutrition Chart - Visual */}
+        <div className="px-4 mb-4">
+          <div className="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+              <span>📊</span> Besin Değerleri
+            </h3>
+            <div className="space-y-4">
+              {/* Sugar */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-slate-400">Şeker</span>
+                  <span className="text-white font-medium">{nutrition.sugar?.value || 0}g</span>
+                </div>
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all ${
+                      (nutrition.sugar?.value || 0) > 22.5 ? 'bg-red-500' : 
+                      (nutrition.sugar?.value || 0) > 12.5 ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min((nutrition.sugar?.value || 0) / 30 * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Fat */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-slate-400">Yağ</span>
+                  <span className="text-white font-medium">{nutrition.fat?.value || 0}g</span>
+                </div>
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all ${
+                      (nutrition.fat?.value || 0) > 20 ? 'bg-red-500' : 
+                      (nutrition.fat?.value || 0) > 10 ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min((nutrition.fat?.value || 0) / 30 * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Saturated Fat */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-slate-400">Doymuş Yağ</span>
+                  <span className="text-white font-medium">{nutrition.saturated_fat?.value || 0}g</span>
+                </div>
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all ${
+                      (nutrition.saturated_fat?.value || 0) > 5 ? 'bg-red-500' : 
+                      (nutrition.saturated_fat?.value || 0) > 2.5 ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min((nutrition.saturated_fat?.value || 0) / 10 * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Salt */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-slate-400">Tuz</span>
+                  <span className="text-white font-medium">{nutrition.salt?.value || 0}g</span>
+                </div>
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all ${
+                      (nutrition.salt?.value || 0) > 1.5 ? 'bg-red-500' : 
+                      (nutrition.salt?.value || 0) > 0.75 ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min((nutrition.salt?.value || 0) / 2.5 * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Protein - Good */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-slate-400">Protein</span>
+                  <span className="text-white font-medium">{nutrition.protein?.value || 0}g</span>
+                </div>
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full bg-blue-500 transition-all"
+                    style={{ width: `${Math.min((nutrition.protein?.value || 0) / 20 * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Fiber - Good */}
+              {nutrition.fiber?.value > 0 && (
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-400">Lif</span>
+                    <span className="text-white font-medium">{nutrition.fiber?.value || 0}g</span>
+                  </div>
+                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full bg-green-500 transition-all"
+                      style={{ width: `${Math.min((nutrition.fiber?.value || 0) / 10 * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Legend */}
+            <div className="flex gap-4 mt-4 pt-4 border-t border-white/10">
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" /> Düşük
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <div className="w-2 h-2 rounded-full bg-amber-500" /> Orta
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <div className="w-2 h-2 rounded-full bg-red-500" /> Yüksek
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1510,7 +1701,7 @@ JSON formatında yanıt ver:
       )}
 
       {/* Info Modal */}
-      {infoModal && infoContents[infoModal] && (
+      {infoModal && (infoContents[infoModal] || infoModal === 'ecode_result') && (
         <div className="fixed inset-0 z-[150] flex items-end justify-center" onClick={() => setInfoModal(null)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div 
@@ -1525,10 +1716,14 @@ JSON formatında yanıt ver:
             {/* Header */}
             <div className="flex items-center gap-4 px-6 pb-4 border-b border-white/10">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
-                <span className="text-3xl">{infoContents[infoModal].icon}</span>
+                <span className="text-3xl">
+                  {infoModal === 'ecode_result' ? getEcodeModalContent()?.icon : infoContents[infoModal]?.icon}
+                </span>
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-bold text-lg">{infoContents[infoModal].title}</h3>
+                <h3 className="text-white font-bold text-lg">
+                  {infoModal === 'ecode_result' ? getEcodeModalContent()?.title : infoContents[infoModal]?.title}
+                </h3>
               </div>
               <button 
                 onClick={() => setInfoModal(null)}
@@ -1541,7 +1736,7 @@ JSON formatında yanıt ver:
             {/* Content */}
             <div className="px-6 py-5 overflow-auto max-h-[60vh]">
               <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-line">
-                {infoContents[infoModal].content}
+                {infoModal === 'ecode_result' ? getEcodeModalContent()?.content : infoContents[infoModal]?.content}
               </p>
             </div>
             
