@@ -926,6 +926,7 @@ JSON formatında yanıt ver:
         </div>
 
         {/* Personal Assessment */}
+        <div className="px-4 space-y-3">
           {(() => {
             const concerns = [];
             const benefits = [];
