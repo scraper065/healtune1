@@ -142,12 +142,135 @@ function App() {
   const [toast, setToast] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
+  const [infoModal, setInfoModal] = useState(null); // {type: 'nutriscore'|'nova'|'halal'|...}
   const [userProfile, setUserProfile] = useState({
     diseases: [],
     sensitivities: [],
     diet: [],
     goals: []
   });
+
+  // Info modal içerikleri
+  const infoContents = {
+    nutriscore: {
+      icon: '🔤',
+      title: 'Nutri-Score Nedir?',
+      content: `Nutri-Score, gıda ürünlerinin besin kalitesini A'dan E'ye harf notlarıyla gösteren bir sistemdir.
+
+🟢 A - Çok iyi besin kalitesi
+🟢 B - İyi besin kalitesi  
+🟡 C - Orta besin kalitesi
+🟠 D - Düşük besin kalitesi
+🔴 E - Kötü besin kalitesi
+
+Hesaplamada şeker, doymuş yağ, tuz ve kalori negatif; lif, protein, meyve/sebze oranı pozitif etki eder.`
+    },
+    nova: {
+      icon: '🏭',
+      title: 'NOVA Grubu Nedir?',
+      content: `NOVA, gıdaların işlenme derecesini 1-4 arası sınıflandırır.
+
+🟢 NOVA 1 - İşlenmemiş veya minimal işlenmiş
+Taze meyve, sebze, et, yumurta, süt
+
+🟢 NOVA 2 - İşlenmiş mutfak malzemeleri
+Yağlar, tereyağı, şeker, tuz, un
+
+🟡 NOVA 3 - İşlenmiş gıdalar
+Konserve, peynir, ekmek, tuzlu kuruyemiş
+
+🔴 NOVA 4 - Ultra işlenmiş gıdalar
+Hazır yemek, cipis, gazlı içecek, şekerleme
+
+Ultra işlenmiş gıdalar obezite, diyabet ve kalp hastalığı riskini artırabilir.`
+    },
+    halal: {
+      icon: '☪️',
+      title: 'Helal Kontrol',
+      content: `Helal kontrolü, ürünlerdeki katkı maddelerinin İslami kurallara uygunluğunu inceler.
+
+🔴 Haram E-kodları:
+E120 (Karmin) - Böcekten elde edilir
+E441 (Jelatin) - Domuz kaynaklı olabilir
+E904 (Shellac) - Böcek salgısı
+
+🟡 Şüpheli E-kodları:
+E471, E472-477 - Hayvansal/bitkisel belirsiz
+E481-483, E491-495 - Kaynak belirsiz
+
+🟢 Helal E-kodları:
+E100-E180 (Renklendiriciler)
+E200-E297 (Koruyucular)
+E300-E341 (Antioksidanlar)
+
+Not: Kesin helal sertifikası için üreticiye danışın.`
+    },
+    boycott: {
+      icon: '✊',
+      title: 'Boykot Listesi',
+      content: `Boykot listesi, tüketicilerin etik veya politik sebeplerle satın almamayı tercih ettiği markaları içerir.
+
+Bu liste kullanıcıların kendi tercihlerine yardımcı olmak için sunulmaktadır.
+
+Listede 70+ uluslararası marka bulunmaktadır.
+
+Karar tamamen size aittir.`
+    },
+    turkish: {
+      icon: '🇹🇷',
+      title: 'Yerli Üretim',
+      content: `Yerli üretim kontrolü, ürünün Türk markası olup olmadığını tespit eder.
+
+🇹🇷 Yerli markaları desteklemek:
+• Yerel ekonomiyi güçlendirir
+• İstihdam sağlar
+• Döviz çıkışını azaltır
+
+Veritabanımızda 50+ Türk markası kayıtlıdır:
+Ülker, Eti, Torku, Pınar, Sütaş, Tat, Uno, Tamek, Dimes, Uludağ ve daha fazlası.`
+    },
+    healthscore: {
+      icon: '💯',
+      title: 'Sağlık Skoru',
+      content: `Sağlık Skoru (0-100), ürünün genel beslenme kalitesini gösterir.
+
+📊 Hesaplama kriterleri:
+
+Puan düşüren faktörler:
+• Yüksek şeker (-15 puan)
+• Yüksek yağ (-12 puan)
+• Yüksek doymuş yağ (-10 puan)
+• Yüksek tuz (-8 puan)
+• Çok katkı maddesi (-10 puan)
+• Ultra işlenmiş (NOVA 4) (-15 puan)
+
+Puan artıran faktörler:
+• Yüksek lif (+5 puan)
+• Yüksek protein (+5 puan)
+• Organik (+5 puan)
+• İşlenmemiş (NOVA 1) (+10 puan)
+
+80+ Çok Sağlıklı | 65+ Sağlıklı | 50+ Orta | 30+ Dikkat | 30- Kaçın`
+    },
+    vegan: {
+      icon: '🌱',
+      title: 'Vegan Kontrolü',
+      content: `Vegan kontrolü, üründe hayvansal içerik olup olmadığını tespit eder.
+
+❌ Vegan olmayan içerikler:
+• Et, tavuk, balık, deniz ürünleri
+• Süt, peynir, yoğurt, tereyağı
+• Yumurta, bal
+• Jelatin (E441)
+• Karmin (E120)
+
+✅ Vegan alternatifler:
+• Bitkisel süt (badem, soya, yulaf)
+• Tofu, tempeh
+• Baklagiller
+• Kuruyemişler`
+    }
+  };
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -826,26 +949,28 @@ JSON formatında yanıt ver:
                 <div className="flex gap-2 mt-2 flex-wrap">
                   <span className="px-3 py-1 bg-slate-800/60 rounded-full text-xs text-slate-300">{product.category}</span>
                   <span className="px-3 py-1 bg-slate-800/60 rounded-full text-xs text-slate-300">{product.serving_size || '100g'}</span>
-                  <span 
-                    className="px-3 py-1 rounded-full text-xs font-bold text-white"
+                  <button 
+                    onClick={() => setInfoModal('nutriscore')}
+                    className="px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1 active:scale-95 transition-transform"
                     style={{ backgroundColor: gradeInfo.color }}
                   >
                     Nutri-Score {gradeInfo.grade}
-                  </span>
+                    <Info size={10} />
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* Score Circle */}
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Sağlık Skoru</p>
+              <button onClick={() => setInfoModal('healthscore')} className="text-left active:scale-[0.98] transition-transform">
+                <p className="text-slate-400 text-sm mb-1 flex items-center gap-1">Sağlık Skoru <Info size={12} /></p>
                 <div className="flex items-baseline gap-1">
                   <span className="text-5xl font-bold text-white">{healthScore}</span>
                   <span className="text-slate-500">/100</span>
                 </div>
                 <p className="text-sm mt-1" style={{ color: gradeInfo.color }}>{gradeInfo.label}</p>
-              </div>
+              </button>
               <div 
                 className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold text-white border-4"
                 style={{ borderColor: gradeInfo.color, backgroundColor: `${gradeInfo.color}20` }}
@@ -871,56 +996,71 @@ JSON formatında yanıt ver:
         <div className="px-4 mb-4">
           <div className="flex flex-wrap gap-2">
             {/* Halal Badge */}
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
-              isHalal ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-red-500/15 border border-red-500/30'
-            }`}>
+            <button 
+              onClick={() => setInfoModal('halal')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl active:scale-95 transition-transform ${
+                isHalal ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-red-500/15 border border-red-500/30'
+              }`}
+            >
               <span className="text-lg">☪️</span>
               <span className={`text-sm font-medium ${isHalal ? 'text-emerald-400' : 'text-red-400'}`}>
                 {isHalal ? 'Helal' : 'Şüpheli'}
               </span>
               {isHalal ? <Check size={14} className="text-emerald-400" /> : <AlertTriangle size={14} className="text-red-400" />}
-            </div>
+            </button>
 
             {/* Turkish Badge */}
             {isTurkish && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/15 border border-blue-500/30">
+              <button 
+                onClick={() => setInfoModal('turkish')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/15 border border-blue-500/30 active:scale-95 transition-transform"
+              >
                 <span className="text-lg">🇹🇷</span>
                 <span className="text-sm font-medium text-blue-400">Yerli</span>
                 <Check size={14} className="text-blue-400" />
-              </div>
+              </button>
             )}
 
             {/* Boycott Badge */}
             {isBoycott && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/15 border border-red-500/30">
+              <button 
+                onClick={() => setInfoModal('boycott')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/15 border border-red-500/30 active:scale-95 transition-transform"
+              >
                 <span className="text-lg">✊</span>
                 <span className="text-sm font-medium text-red-400">Boykot</span>
                 <AlertTriangle size={14} className="text-red-400" />
-              </div>
+              </button>
             )}
 
             {/* Vegan Badge - if applicable */}
             {!ingredients?.raw_text?.toLowerCase().match(/et|süt|yumurta|bal|jelatin|peynir|tereyağ/) && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/15 border border-green-500/30">
+              <button 
+                onClick={() => setInfoModal('vegan')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/15 border border-green-500/30 active:scale-95 transition-transform"
+              >
                 <span className="text-lg">🌱</span>
                 <span className="text-sm font-medium text-green-400">Vegan</span>
                 <Check size={14} className="text-green-400" />
-              </div>
+              </button>
             )}
 
             {/* NOVA Badge */}
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
-              novaGroup <= 2 ? 'bg-emerald-500/15 border border-emerald-500/30' : 
-              novaGroup === 3 ? 'bg-amber-500/15 border border-amber-500/30' : 
-              'bg-red-500/15 border border-red-500/30'
-            }`}>
+            <button 
+              onClick={() => setInfoModal('nova')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl active:scale-95 transition-transform ${
+                novaGroup <= 2 ? 'bg-emerald-500/15 border border-emerald-500/30' : 
+                novaGroup === 3 ? 'bg-amber-500/15 border border-amber-500/30' : 
+                'bg-red-500/15 border border-red-500/30'
+              }`}
+            >
               <span className="text-lg">🏭</span>
               <span className={`text-sm font-medium ${
                 novaGroup <= 2 ? 'text-emerald-400' : novaGroup === 3 ? 'text-amber-400' : 'text-red-400'
               }`}>
                 NOVA {novaGroup}
               </span>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -1365,6 +1505,55 @@ JSON formatında yanıt ver:
             <button onClick={() => setToast(null)} className="flex-shrink-0 p-1">
               <X size={16} className="text-white/70" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Info Modal */}
+      {infoModal && infoContents[infoModal] && (
+        <div className="fixed inset-0 z-[150] flex items-end justify-center" onClick={() => setInfoModal(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div 
+            className="relative bg-slate-800 rounded-t-3xl w-full max-w-lg max-h-[80vh] overflow-hidden animate-slide-up"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-slate-600 rounded-full" />
+            </div>
+            
+            {/* Header */}
+            <div className="flex items-center gap-4 px-6 pb-4 border-b border-white/10">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
+                <span className="text-3xl">{infoContents[infoModal].icon}</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-lg">{infoContents[infoModal].title}</h3>
+              </div>
+              <button 
+                onClick={() => setInfoModal(null)}
+                className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center"
+              >
+                <X size={16} className="text-slate-400" />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="px-6 py-5 overflow-auto max-h-[60vh]">
+              <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-line">
+                {infoContents[infoModal].content}
+              </p>
+            </div>
+            
+            {/* Close Button */}
+            <div className="px-6 pb-8 pt-2">
+              <button 
+                onClick={() => setInfoModal(null)}
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition"
+              >
+                Anladım
+              </button>
+            </div>
           </div>
         </div>
       )}
