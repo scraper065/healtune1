@@ -6,6 +6,7 @@ import './App.css';
 import { fetchProductByBarcode } from './api/openFoodFacts';
 import { turkishProductsDB, turkishBrandsList, boycottBrandsList, isTurkishBrand, isBoycottBrand, findLocalProduct } from './data/turkishProducts';
 import { eCodeDatabase, checkECode, hasHaramOrSuspicious } from './data/eCodes';
+import { getAlternatives, getBoycottAlternatives } from './data/alternatives';
 
 // Utility functions
 const calculateHealthScore = (nutrition) => {
@@ -1011,6 +1012,11 @@ JSON formatında yanıt ver:
     if (!result) return null;
     const { product, nutrition, healthScore, gradeInfo, novaGroup, ingredients, alternatives, isBoycott, isTurkish, isHalal } = result;
     
+    // Dinamik alternatif önerileri hesapla
+    const dynamicAlternatives = isBoycott 
+      ? getBoycottAlternatives(product.category)
+      : getAlternatives(product.category, healthScore);
+    
     return (
       <div className="flex-1 overflow-auto pb-24">
         {/* Header */}
@@ -1605,27 +1611,31 @@ ${isBoycott ? '✊ Boykot Listesinde' : ''}
           </div>
         )}
 
-        {/* Alternatives */}
-        {alternatives?.length > 0 && (
+        {/* Alternatives - Dynamic */}
+        {dynamicAlternatives?.length > 0 && (
           <div className="px-4 mt-6 mb-8">
             <div className="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">🔄</span>
-                <span className="text-white font-semibold">Daha Sağlıklı Alternatifler</span>
+                <span className="text-lg">{isBoycott ? '🇹🇷' : '💚'}</span>
+                <span className="text-white font-semibold">
+                  {isBoycott ? 'Yerli Alternatifler' : 'Daha Sağlıklı Alternatifler'}
+                </span>
               </div>
               
               <div className="space-y-3">
-                {alternatives.map((alt, idx) => (
+                {dynamicAlternatives.map((alt, idx) => (
                   <div key={idx} className="bg-slate-900/50 rounded-xl p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-xl">🇹🇷</span>
+                      <span className="text-2xl">{alt.icon}</span>
                       <div>
                         <p className="text-white font-medium">{alt.name}</p>
                         <p className="text-slate-500 text-sm">{alt.brand}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-emerald-400 font-semibold">{alt.score_diff || '+20'} puan</p>
+                      <p className="text-emerald-400 font-semibold">
+                        {alt.healthScore > healthScore ? `+${alt.healthScore - healthScore}` : alt.healthScore} puan
+                      </p>
                       <p className="text-slate-500 text-xs">{alt.benefit}</p>
                     </div>
                   </div>
