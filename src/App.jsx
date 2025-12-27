@@ -1364,8 +1364,8 @@ JSON formatında yanıt ver:
           })()}
         </div>
 
-        {/* Alternative Products */}
-        {healthScore < 60 && (
+        {/* Alternative Products - Using Database */}
+        {healthScore < 70 && (
           <div className="px-4 mt-4">
             <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-2xl p-5 border border-emerald-500/20">
               <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
@@ -1373,38 +1373,33 @@ JSON formatında yanıt ver:
               </h3>
               <div className="space-y-2">
                 {(() => {
-                  const alternatives = [];
-                  const cat = product.category?.toLowerCase() || '';
+                  // Boykot ürünü ise önce yerli alternatif göster
+                  const alts = isBoycott 
+                    ? [...getBoycottAlternatives(product.category), ...getAlternatives(product.category, healthScore)]
+                    : getAlternatives(product.category, healthScore);
                   
-                  if (cat.includes('içecek') || cat.includes('beverage')) {
-                    alternatives.push({ name: 'Maden Suyu', brand: 'Kızılay', score: 95, icon: '💧' });
-                    alternatives.push({ name: 'Ayran', brand: 'Sütaş', score: 85, icon: '🥛' });
-                  } else if (cat.includes('atıştırmalık') || cat.includes('çikolata') || cat.includes('snack')) {
-                    alternatives.push({ name: 'Kuru Meyve', brand: 'Tadım', score: 80, icon: '🍎' });
-                    alternatives.push({ name: 'Çiğ Badem', brand: 'Peyman', score: 88, icon: '🥜' });
-                  } else if (cat.includes('süt')) {
-                    alternatives.push({ name: 'Sade Yoğurt', brand: 'Sütaş', score: 90, icon: '🥛' });
-                    alternatives.push({ name: 'Lor Peyniri', brand: 'Pınar', score: 85, icon: '🧀' });
-                  } else {
-                    alternatives.push({ name: 'Tam Buğday Ekmek', brand: 'Uno', score: 75, icon: '🍞' });
-                    alternatives.push({ name: 'Taze Meyve', brand: '-', score: 95, icon: '🍎' });
-                  }
-                  
-                  return alternatives.map((alt, i) => (
+                  return alts.slice(0, 3).map((alt, i) => (
                     <div key={i} className="flex items-center gap-3 bg-slate-800/40 rounded-xl p-3">
                       <span className="text-xl">{alt.icon}</span>
                       <div className="flex-1">
                         <p className="text-white text-sm font-medium">{alt.name}</p>
                         <p className="text-slate-500 text-xs">{alt.brand}</p>
+                        <p className="text-emerald-400/70 text-xs mt-0.5">{alt.benefit}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-emerald-400 font-bold text-sm">{alt.score}</p>
-                        <p className="text-emerald-400/60 text-xs">+{alt.score - healthScore}</p>
+                        <p className="text-emerald-400 font-bold text-sm">{alt.healthScore}</p>
+                        <p className="text-emerald-400/60 text-xs">+{alt.healthScore - healthScore} puan</p>
                       </div>
                     </div>
                   ));
                 })()}
               </div>
+              
+              {isBoycott && (
+                <p className="text-amber-400/80 text-xs mt-3 flex items-center gap-1">
+                  <span>🇹🇷</span> Yerli alternatifler öne çıkarıldı
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -2037,6 +2032,128 @@ ${result.isBoycott ? '✊ Boykot Listesinde' : ''}
                 className="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition"
               >
                 <X size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Card Modal */}
+      {showShareCard && result && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4" onClick={() => setShowShareCard(false)}>
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div className="relative w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            {/* Share Card */}
+            <div 
+              ref={shareCardRef}
+              className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 border border-white/10 shadow-2xl"
+            >
+              {/* Logo */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">H</span>
+                </div>
+                <span className="text-white font-bold">Healtune</span>
+              </div>
+              
+              {/* Product Info */}
+              <div className="text-center mb-4">
+                <span className="text-4xl mb-2 block">{(() => {
+                  const cat = result.product?.category?.toLowerCase() || '';
+                  if (cat.includes('içecek')) return '🥤';
+                  if (cat.includes('süt')) return '🥛';
+                  if (cat.includes('atıştırmalık') || cat.includes('çikolata')) return '🍫';
+                  if (cat.includes('meyve')) return '🍎';
+                  return '🍽️';
+                })()}</span>
+                <h3 className="text-white font-bold text-xl">{result.product?.name}</h3>
+                <p className="text-slate-400">{result.product?.brand}</p>
+              </div>
+              
+              {/* Score Circle */}
+              <div className="flex justify-center mb-4">
+                <div 
+                  className="w-24 h-24 rounded-full flex flex-col items-center justify-center border-4"
+                  style={{ 
+                    borderColor: result.gradeInfo?.color,
+                    backgroundColor: `${result.gradeInfo?.color}20`
+                  }}
+                >
+                  <span className="text-3xl font-bold text-white">{result.healthScore}</span>
+                  <span className="text-xs text-slate-400">/ 100</span>
+                </div>
+              </div>
+              
+              {/* Grade */}
+              <div className="text-center mb-4">
+                <span 
+                  className="inline-block px-4 py-1 rounded-full text-sm font-bold text-white"
+                  style={{ backgroundColor: result.gradeInfo?.color }}
+                >
+                  {result.gradeInfo?.label}
+                </span>
+              </div>
+              
+              {/* Quick Stats */}
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                {[
+                  { label: 'Şeker', value: result.nutrition?.sugar?.value || 0, color: 'text-pink-400' },
+                  { label: 'Yağ', value: result.nutrition?.fat?.value || 0, color: 'text-amber-400' },
+                  { label: 'Tuz', value: result.nutrition?.salt?.value || 0, color: 'text-purple-400' },
+                  { label: 'NOVA', value: result.novaGroup || '?', color: 'text-blue-400' },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-slate-700/50 rounded-xl p-2 text-center">
+                    <p className={`font-bold ${stat.color}`}>{typeof stat.value === 'number' ? stat.value.toFixed(1) : stat.value}{typeof stat.value === 'number' && 'g'}</p>
+                    <p className="text-slate-500 text-xs">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Badges */}
+              <div className="flex flex-wrap justify-center gap-2 mb-4">
+                {result.isHalal !== false && (
+                  <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs">☪️ Helal</span>
+                )}
+                {result.isTurkish && (
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">🇹🇷 Yerli</span>
+                )}
+                {result.isBoycott && (
+                  <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs">✊ Boykot</span>
+                )}
+              </div>
+              
+              {/* Footer */}
+              <p className="text-center text-slate-500 text-xs">healtune.app ile analiz edildi</p>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={async () => {
+                  try {
+                    const text = `${result.product?.name} (${result.product?.brand})\n\n🏆 Sağlık Skoru: ${result.healthScore}/100 - ${result.gradeInfo?.label}\n\n📊 Besin Değerleri (100g):\n🍬 Şeker: ${result.nutrition?.sugar?.value || 0}g\n🧈 Yağ: ${result.nutrition?.fat?.value || 0}g\n🧂 Tuz: ${result.nutrition?.salt?.value || 0}g\n\n${result.isHalal !== false ? '☪️ Helal Uyumlu' : '⚠️ Şüpheli İçerik'}\n${result.isTurkish ? '🇹🇷 Yerli Üretim' : ''}\n${result.isBoycott ? '✊ Boykot Listesinde' : ''}\n\n📱 Healtune ile analiz edildi`;
+                    
+                    if (navigator.share) {
+                      await navigator.share({ text });
+                    } else {
+                      await navigator.clipboard.writeText(text);
+                      showToast('success', 'Panoya kopyalandı!');
+                    }
+                    setShowShareCard(false);
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition"
+              >
+                <Share2 size={18} />
+                Paylaş
+              </button>
+              <button
+                onClick={() => setShowShareCard(false)}
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl transition"
+              >
+                Kapat
               </button>
             </div>
           </div>
