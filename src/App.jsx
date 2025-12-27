@@ -84,14 +84,50 @@ const getCategoryIcon = (category) => {
   return icons[category] || '🍽️';
 };
 
-// Quick test products
+// Quick test products with full mock data
 const quickTestProducts = [
-  { name: 'Çikolatalı Gofret', brand: 'Ülker', grade: 'E', color: '#EF4444', icon: '🍫' },
-  { name: 'Sade Yoğurt', brand: 'Sütaş', grade: 'A', color: '#10B981', icon: '🥛' },
-  { name: 'Coca-Cola', brand: 'Coca-Cola', grade: 'E', color: '#EF4444', icon: '🥤' },
-  { name: 'Beyaz Peynir', brand: 'Pınar', grade: 'C', color: '#F59E0B', icon: '🧀' },
-  { name: 'Tam Buğday Ekmek', brand: 'Uno', grade: 'B', color: '#22C55E', icon: '🍞' },
-  { name: 'Domates Salçası', brand: 'Tat', grade: 'A', color: '#10B981', icon: '🍅' },
+  { 
+    name: 'Çikolatalı Gofret', brand: 'Ülker', grade: 'E', color: '#EF4444', icon: '🍫',
+    category: 'Atıştırmalık', healthScore: 25, novaGroup: 4,
+    nutrition: { energy: { value: 520 }, protein: { value: 6 }, carbohydrates: { value: 58 }, sugar: { value: 32 }, fat: { value: 28 }, saturated_fat: { value: 14 }, fiber: { value: 2 }, salt: { value: 0.3 } },
+    ingredients: { raw_text: 'Şeker, bitkisel yağ, buğday unu, kakao, lesitin (E322)', additives_list: ['E322'] },
+    isBoycott: false, isTurkish: true, isHalal: true
+  },
+  { 
+    name: 'Sade Yoğurt', brand: 'Sütaş', grade: 'A', color: '#10B981', icon: '🥛',
+    category: 'Süt Ürünü', healthScore: 88, novaGroup: 1,
+    nutrition: { energy: { value: 63 }, protein: { value: 5 }, carbohydrates: { value: 4 }, sugar: { value: 4 }, fat: { value: 3.5 }, saturated_fat: { value: 2 }, fiber: { value: 0 }, salt: { value: 0.1 } },
+    ingredients: { raw_text: 'Pastörize inek sütü, yoğurt kültürü', additives_list: [] },
+    isBoycott: false, isTurkish: true, isHalal: true
+  },
+  { 
+    name: 'Coca-Cola', brand: 'Coca-Cola', grade: 'E', color: '#EF4444', icon: '🥤',
+    category: 'İçecek', healthScore: 15, novaGroup: 4,
+    nutrition: { energy: { value: 42 }, protein: { value: 0 }, carbohydrates: { value: 10.6 }, sugar: { value: 10.6 }, fat: { value: 0 }, saturated_fat: { value: 0 }, fiber: { value: 0 }, salt: { value: 0 } },
+    ingredients: { raw_text: 'Karbonatlı su, şeker, renklendirici (E150d), fosforik asit, doğal aromalar, kafein', additives_list: ['E150d'] },
+    isBoycott: true, isTurkish: false, isHalal: true
+  },
+  { 
+    name: 'Beyaz Peynir', brand: 'Pınar', grade: 'C', color: '#F59E0B', icon: '🧀',
+    category: 'Süt Ürünü', healthScore: 55, novaGroup: 2,
+    nutrition: { energy: { value: 250 }, protein: { value: 17 }, carbohydrates: { value: 1 }, sugar: { value: 0.5 }, fat: { value: 20 }, saturated_fat: { value: 12 }, fiber: { value: 0 }, salt: { value: 2.5 } },
+    ingredients: { raw_text: 'Pastörize inek sütü, tuz, peynir mayası, kalsiyum klorür', additives_list: [] },
+    isBoycott: false, isTurkish: true, isHalal: true
+  },
+  { 
+    name: 'Tam Buğday Ekmek', brand: 'Uno', grade: 'B', color: '#22C55E', icon: '🍞',
+    category: 'Fırın Ürünü', healthScore: 72, novaGroup: 3,
+    nutrition: { energy: { value: 230 }, protein: { value: 9 }, carbohydrates: { value: 42 }, sugar: { value: 3 }, fat: { value: 2.5 }, saturated_fat: { value: 0.5 }, fiber: { value: 7 }, salt: { value: 1.1 } },
+    ingredients: { raw_text: 'Tam buğday unu, su, maya, tuz, buğday glüteni', additives_list: [] },
+    isBoycott: false, isTurkish: true, isHalal: true
+  },
+  { 
+    name: 'Domates Salçası', brand: 'Tat', grade: 'A', color: '#10B981', icon: '🍅',
+    category: 'Sos', healthScore: 85, novaGroup: 2,
+    nutrition: { energy: { value: 100 }, protein: { value: 4.5 }, carbohydrates: { value: 18 }, sugar: { value: 12 }, fat: { value: 0.5 }, saturated_fat: { value: 0.1 }, fiber: { value: 4 }, salt: { value: 1.5 } },
+    ingredients: { raw_text: 'Domates (%99), tuz', additives_list: [] },
+    isBoycott: false, isTurkish: true, isHalal: true
+  },
 ];
 
 function App() {
@@ -499,6 +535,40 @@ JSON formatında yanıt ver:
     reader.readAsDataURL(file);
   };
 
+  // Quick test product click handler
+  const handleQuickTest = (product) => {
+    const gradeInfo = getGradeInfo(product.healthScore);
+    const fullResult = {
+      product: {
+        name: product.name,
+        brand: product.brand,
+        category: product.category,
+        serving_size: '100g'
+      },
+      nutrition: product.nutrition,
+      healthScore: product.healthScore,
+      gradeInfo,
+      novaGroup: product.novaGroup,
+      ingredients: product.ingredients,
+      additives: [],
+      alternatives: [],
+      isBoycott: product.isBoycott,
+      isTurkish: product.isTurkish,
+      isHalal: product.isHalal,
+      dataSource: 'demo',
+      analyzedAt: new Date().toISOString()
+    };
+    
+    setResult(fullResult);
+    
+    // Add to history
+    const newHistory = [fullResult, ...history.slice(0, 19)];
+    setHistory(newHistory);
+    localStorage.setItem('gidax_history', JSON.stringify(newHistory));
+    
+    showToast('success', `${product.name} analiz edildi`);
+  };
+
   const toggleFavorite = () => {
     if (!result) return;
     const exists = favorites.find(f => f.product.name === result.product.name);
@@ -646,7 +716,8 @@ JSON formatında yanıt ver:
               {quickTestProducts.map((product, idx) => (
                 <button
                   key={idx}
-                  className="bg-slate-800/40 border border-white/5 rounded-xl p-3 sm:p-4 text-left active:bg-slate-800/70 transition-colors"
+                  onClick={() => handleQuickTest(product)}
+                  className="bg-slate-800/40 border border-white/5 rounded-xl p-3 sm:p-4 text-left active:bg-slate-800/70 active:scale-[0.98] transition-all"
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3">
                     <span className="text-xl sm:text-2xl flex-shrink-0">{product.icon}</span>
