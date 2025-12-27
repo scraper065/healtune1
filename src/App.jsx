@@ -1464,55 +1464,95 @@ ${isBoycott ? '✊ Boykot Listesinde' : ''}
           </div>
         </div>
 
-        {/* Nutrition Details */}
+        {/* Nutrition Details - Visual Charts */}
         <div className="px-4 mt-6">
           <div className="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-5">
               <span className="text-lg">📊</span>
               <span className="text-white font-semibold">Besin Değerleri</span>
               <span className="text-slate-500 text-sm">(100g)</span>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Enerji</span>
-                <span className="text-white font-semibold">{nutrition.energy?.value || 0} kcal</span>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: 'Protein', value: nutrition.protein?.value, color: 'from-blue-500 to-blue-600' },
-                  { label: 'Karbonhidrat', value: nutrition.carbohydrates?.value, color: 'from-purple-500 to-purple-600' },
-                  { label: 'Yağ', value: nutrition.fat?.value, color: 'from-amber-500 to-amber-600' },
-                ].map((item, idx) => (
-                  <div key={idx} className={`bg-gradient-to-br ${item.color} rounded-xl p-3 text-center`}>
-                    <p className="text-white/70 text-xs">{item.label}</p>
-                    <p className="text-white font-bold">{item.value || 0}g</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Nutrient Levels */}
+            {/* Circular Progress Charts */}
+            <div className="grid grid-cols-4 gap-3 mb-6">
               {[
-                { key: 'sugar', label: 'Şeker', value: nutrition.sugar?.value },
-                { key: 'saturated_fat', label: 'Doymuş Yağ', value: nutrition.saturated_fat?.value },
-                { key: 'salt', label: 'Tuz', value: nutrition.salt?.value },
-                { key: 'fiber', label: 'Lif', value: nutrition.fiber?.value },
+                { label: 'Şeker', value: nutrition.sugar?.value || 0, max: 25, color: '#ec4899', unit: 'g' },
+                { label: 'Yağ', value: nutrition.fat?.value || 0, max: 30, color: '#f59e0b', unit: 'g' },
+                { label: 'D.Yağ', value: nutrition.saturated_fat?.value || 0, max: 10, color: '#ef4444', unit: 'g' },
+                { label: 'Tuz', value: nutrition.salt?.value || 0, max: 2.5, color: '#8b5cf6', unit: 'g' },
               ].map((item, idx) => {
-                const level = getNutrientLevel(item.key, item.value || 0);
+                const percentage = Math.min((item.value / item.max) * 100, 100);
+                const circumference = 2 * Math.PI * 28;
+                const strokeDashoffset = circumference - (percentage / 100) * circumference;
+                const isHigh = percentage > 70;
+                const isMedium = percentage > 40 && percentage <= 70;
+                
                 return (
-                  <div key={idx} className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: level.color }} />
-                      <span className="text-slate-300">{item.label}</span>
+                  <div key={idx} className="flex flex-col items-center">
+                    <div className="relative w-16 h-16">
+                      <svg className="w-16 h-16 transform -rotate-90">
+                        <circle cx="32" cy="32" r="28" stroke="#1e293b" strokeWidth="6" fill="none" />
+                        <circle 
+                          cx="32" cy="32" r="28" 
+                          stroke={isHigh ? '#ef4444' : isMedium ? '#f59e0b' : '#10b981'}
+                          strokeWidth="6" 
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={strokeDashoffset}
+                          className="transition-all duration-500"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">{item.value.toFixed(1)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-slate-400 text-sm">{item.value || 0}g</span>
-                      <span className="text-sm font-medium" style={{ color: level.color }}>{level.label}</span>
-                    </div>
+                    <span className="text-slate-400 text-xs mt-1">{item.label}</span>
+                    <span className={`text-[10px] font-medium ${isHigh ? 'text-red-400' : isMedium ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      {isHigh ? 'Yüksek' : isMedium ? 'Orta' : 'Düşük'}
+                    </span>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Macros Bar */}
+            <div className="mb-4">
+              <p className="text-slate-400 text-xs mb-2">Makro Besinler</p>
+              <div className="flex h-3 rounded-full overflow-hidden bg-slate-700">
+                {(() => {
+                  const protein = nutrition.protein?.value || 0;
+                  const carbs = nutrition.carbohydrates?.value || 0;
+                  const fat = nutrition.fat?.value || 0;
+                  const total = protein + carbs + fat || 1;
+                  return (
+                    <>
+                      <div className="bg-blue-500 transition-all" style={{ width: `${(protein/total)*100}%` }} />
+                      <div className="bg-purple-500 transition-all" style={{ width: `${(carbs/total)*100}%` }} />
+                      <div className="bg-amber-500 transition-all" style={{ width: `${(fat/total)*100}%` }} />
+                    </>
+                  );
+                })()}
+              </div>
+              <div className="flex justify-between mt-2 text-xs">
+                <span className="text-blue-400">Protein {nutrition.protein?.value || 0}g</span>
+                <span className="text-purple-400">Karb. {nutrition.carbohydrates?.value || 0}g</span>
+                <span className="text-amber-400">Yağ {nutrition.fat?.value || 0}g</span>
+              </div>
+            </div>
+
+            {/* Energy & Fiber */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-900/50 rounded-xl p-3 text-center">
+                <p className="text-slate-500 text-xs">Enerji</p>
+                <p className="text-orange-400 font-bold text-lg">{nutrition.energy?.value || 0}</p>
+                <p className="text-slate-500 text-xs">kcal</p>
+              </div>
+              <div className="bg-slate-900/50 rounded-xl p-3 text-center">
+                <p className="text-slate-500 text-xs">Lif</p>
+                <p className="text-green-400 font-bold text-lg">{nutrition.fiber?.value || 0}</p>
+                <p className="text-slate-500 text-xs">g</p>
+              </div>
             </div>
           </div>
         </div>
